@@ -2,6 +2,7 @@ import os
 import uuid
 import shutil
 import datetime
+import logging
 from arches.app.models.concept import Concept
 from arches.app.models import models
 from arches.app.models.models import ResourceXResource
@@ -15,9 +16,11 @@ from django.contrib.gis.geos import GeometryCollection
 from django.contrib.gis.geos import MultiPoint
 from django.contrib.gis.geos import MultiPolygon
 from django.contrib.gis.geos import MultiLineString
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection, transaction
 from django.utils.translation import ugettext as _
 
+logger = logging.getLogger(__name__)
 
 class MissingGraphException(Exception):
     def __init__(self, value=None):
@@ -68,7 +71,6 @@ class ResourceImportReporter:
 
 class Reader(object):
     def __init__(self):
-        self.errors = []
         self.datatype_factory = DataTypeFactory()
 
     def validate_datatypes(self, record):
@@ -110,18 +112,8 @@ class Reader(object):
                 # 1.) a legacyid was passed in and get_resourceid_from_legacyid could not find a resource or found multiple resources with the indicated legacyid or
                 # 2.) a uuid was passed in and it is not associated with a resource instance
                 if newresourceinstanceid is None:
-                    errors = []
-                    # self.errors.append({'datatype':'legacyid', 'value':relation[key], 'source':'', 'message':'either multiple resources or no resource have this legacyid\n'})
-                    errors.append(
-                        {
-                            "type": "ERROR",
-                            "message": "Relation not created, either zero or multiple resources found with legacyid: {0}".format(
-                                relation[key]
-                            ),
-                        }
-                    )
-                    if len(errors) > 0:
-                        self.errors += errors
+                    msg = f"Relation not created, either zero or multiple resources found with legacyid: {relation[key]}"
+                    logger.error(msg)
 
                 return newresourceinstanceid
 
@@ -171,50 +163,6 @@ class Reader(object):
                     notes=relation["notes"],
                 )
                 relation.save()
-
-        self.report_errors()
-
-    def report_errors(self):
-        if len(self.errors) == 0:
-            print(_("No import errors"))
-        else:
-            print(
-                _(
-                    "***** Errors occured during import. Some data may not have been imported. For more information, check resource import error log: "
-                )
-                + settings.RESOURCE_IMPORT_LOG
-            )
-            log_nums = [0]
-            if os.path.isfile(settings.RESOURCE_IMPORT_LOG):
-                if os.path.getsize(settings.RESOURCE_IMPORT_LOG) / 1000000 > 5:
-                    for file in os.listdir(os.path.dirname(settings.RESOURCE_IMPORT_LOG)):
-                        try:
-                            log_nums.append(int(file.split(".")[-1]))
-                        except:
-                            pass
-
-                    archive_log_num = str(max(log_nums) + 1)
-                    shutil.copy2(
-                        settings.RESOURCE_IMPORT_LOG,
-                        settings.RESOURCE_IMPORT_LOG.split(".")[0]
-                        + "_"
-                        + archive_log_num
-                        + "."
-                        + settings.RESOURCE_IMPORT_LOG.split(".")[-1],
-                    )
-                    f = open(settings.RESOURCE_IMPORT_LOG, "w")
-                else:
-                    f = open(settings.RESOURCE_IMPORT_LOG, "a")
-            else:
-                f = open(settings.RESOURCE_IMPORT_LOG, "w")
-
-            for error in self.errors:
-                timestamp = (datetime.datetime.now() - datetime.timedelta(hours=2)).strftime("%a %b %d %H:%M:%S %Y")
-                try:
-                    f.write(_(timestamp + " " + "{0}: {1}\n".format(error["type"], error["message"])))
-                except TypeError as e:
-                    f.write(timestamp + " " + e + str(error))
-
 
 class Writer(object):
     def __init__(self, **kwargs):

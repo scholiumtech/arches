@@ -342,7 +342,6 @@ class TileCsvWriter(Writer):
 
 class CsvReader(Reader):
     def __init__(self):
-        self.errors = []
         super(CsvReader, self).__init__()
 
     def save_resource(
@@ -358,7 +357,6 @@ class CsvReader(Reader):
         prevent_indexing,
     ):
         # create a resource instance only if there are populated_tiles
-        errors = []
         if len(populated_tiles) > 0:
             newresourceinstance = Resource(
                 resourceinstanceid=resourceinstanceid,
@@ -379,7 +377,6 @@ class CsvReader(Reader):
                     newresourceinstance.save(index=(not prevent_indexing))
 
                 except TransportError as e:
-
                     cause = json.dumps(e.info["error"]["reason"], indent=1)
                     msg = "%s: WARNING: failed to index document in resource: %s %s. Exception detail:\n%s\n" % (
                         datetime.datetime.now(),
@@ -387,7 +384,7 @@ class CsvReader(Reader):
                         row_number,
                         cause,
                     )
-                    errors.append({"type": "WARNING", "message": msg})
+                    logger.warn(msg)
                     newresourceinstance.delete()
                     save_count = save_count - 1
                 except Exception as e:
@@ -397,21 +394,13 @@ class CsvReader(Reader):
                         row_number,
                         e,
                     )
-                    errors.append({"type": "WARNING", "message": msg})
+                    logger.warn(msg)
                     newresourceinstance.delete()
                     save_count = save_count - 1
 
         else:
-            errors.append(
-                {
-                    "type": "WARNING",
-                    "message": f"No resource created for legacyid: {legacyid}. Make sure there is data to be imported \
-                    for this resource and it is mapped properly in your mapping file.",
-                }
-            )
-
-        if len(errors) > 0:
-            self.errors += errors
+            logger.warn(f"No resource created for legacyid: {legacyid}. Make sure there is data to be imported \
+                    for this resource and it is mapped properly in your mapping file.")
 
         if save_count % (settings.BULK_IMPORT_BATCH_SIZE / 4) == 0:
             print("%s resources processed" % str(save_count))
@@ -426,7 +415,6 @@ class CsvReader(Reader):
         create_collections=False,
         prevent_indexing=False,
     ):
-        # errors = businessDataValidator(self.business_data)
         celery_worker_running = task_management.check_if_celery_available()
 
         print("Starting import of business data")
@@ -499,12 +487,9 @@ class CsvReader(Reader):
                 try:
                     resourceinstanceid = process_resourceid(business_data[0]["ResourceID"], overwrite)
                 except KeyError:
-                    print("*" * 80)
-                    print(
-                        "ERROR: No column 'ResourceID' found in business data file. \
+                    logger.error("ERROR: No column 'ResourceID' found in business data file. \
                         Please add a 'ResourceID' column with a unique resource identifier."
                     )
-                    print("*" * 80)
                     if celery_worker_running is False:  # prevents celery chord from breaking on WorkerLostError
                         sys.exit()
                 graphid = mapping["resource_model_id"]
@@ -581,7 +566,6 @@ class CsvReader(Reader):
                         sys.exit()
 
                 def create_reference_data(new_concepts, create_collections):
-                    errors = []
                     candidates = Concept().get(id="00000000-0000-0000-0000-000000000006")
                     for arches_nodeid, concepts in new_concepts.items():
                         collectionid = str(uuid.uuid4())
@@ -595,31 +579,16 @@ class CsvReader(Reader):
                                 collection_legacyoid = node.name + "_" + str(node.graph_id) + "_import"
                                 # check to see that there is not already a collection for this node
                                 if node.config["rdmCollection"] is not None:
-                                    errors.append(
-                                        {
-                                            "type": "WARNING",
-                                            "message": f"A collection already exists for the {node.name} node. \
-                                            Use the add option to add concepts to this collection.",
-                                        }
-                                    )
-                                    if len(errors) > 0:
-                                        self.errors += errors
+                                    msg = f"A collection already exists for the {node.name} node. Use the add option to add concepts to this collection."
+                                    logger.warn(msg)
                                     collection = None
                                 else:
                                     # if there is no collection assigned to this node, create one and assign it to the node
                                     try:
                                         # check to see that a collection with this legacyid does not already exist
                                         collection = Concept().get(legacyoid=collection_legacyoid)
-                                        errors.append(
-                                            {
-                                                "type": "WARNING",
-                                                "message": "A collection with the legacyid {0} already exists.".format(
-                                                    node.name + "_" + str(node.graph_id) + "_import"
-                                                ),
-                                            }
-                                        )
-                                        if len(errors) > 0:
-                                            self.errors += errors
+                                        msg = f"A collection with the legacyid {node.name}_{str(node.graph_id)}_import already exists."
+                                        logger.warn(msg)
                                     except:
                                         collection = Concept(
                                             {"id": collectionid, "legacyoid": collection_legacyoid, "nodetype": "Collection"}
@@ -727,19 +696,10 @@ class CsvReader(Reader):
                                     blanktilecache[str(key)] = blank_tile
 
                 def column_names_to_targetids(row, mapping, row_number):
-                    errors = []
                     new_row = []
                     if "ADDITIONAL" in row or "MISSING" in row:
-                        errors.append(
-                            {
-                                "type": "WARNING",
-                                "message": "No resource created for ResourceID {0}. Line {1} has additional or missing columns.".format(
-                                    row["ResourceID"], str(int(row_number.split("on line ")[1]))
-                                ),
-                            }
-                        )
-                        if len(errors) > 0:
-                            self.errors += errors
+                        msg = f"No resource created for ResourceID {row['ResourceID']}. Line {str(int(row_number.split('on line ')[1]))} has additional or missing columns."
+                        logger.warn(msg)
                     for key, value in row.items():
                         if value != "":
                             for row in mapping["nodes"]:
@@ -754,7 +714,6 @@ class CsvReader(Reader):
                     """
                     request = ""
                     if datatype != "":
-                        errors = []
                         datatype_instance = datatype_factory.get_instance(datatype)
                         if datatype in ["concept", "domain-value", "concept-list", "domain-value-list"]:
                             try:
@@ -768,24 +727,15 @@ class CsvReader(Reader):
                                     value = concept_lookup.lookup_labelid_from_label(value, collection_id)
                         try:
                             value = datatype_instance.transform_value_for_tile(value)
-                            errors = datatype_instance.validate(value, row_number=row_number, source=source, nodeid=nodeid)
+                            datatype_instance.validate(value, row_number=row_number, source=source, nodeid=nodeid)
                         except Exception as e:
-                            errors.append(
-                                {
-                                    "type": "ERROR",
-                                    "message": "datatype: {0} value: {1} {2} - {3}".format(
+                            msg = "datatype: {0} value: {1} {2} - {3}".format(
                                         datatype_instance.datatype_model.classname,
                                         value,
                                         source,
                                         str(e) + " or is not a prefLabel in the given collection.",
-                                    ),
-                                }
-                            )
-                        if len(errors) > 0:
-                            error_types = [error["type"] for error in errors]
-                            if "ERROR" in error_types:
-                                value = None
-                            self.errors += errors
+                                    )
+                            logger.error(msg)
                     else:
                         print(_("No datatype detected for {0}".format(value)))
 
@@ -811,17 +761,13 @@ class CsvReader(Reader):
                     # Check that each required node in a tile is populated.
                     if settings.BYPASS_REQUIRED_VALUE_TILE_VALIDATION:
                         return
-                    errors = []
                     if len(required_nodes) > 0:
                         if bool(tile.data):
                             for target_k, target_v in tile.data.items():
                                 if target_k in list(required_nodes.keys()) and target_v is None:
                                     if parent_tile in populated_tiles:
                                         populated_tiles.pop(populated_tiles.index(parent_tile))
-                                    errors.append(
-                                        {
-                                            "type": "WARNING",
-                                            "message": "The {0} node is required and must be populated in \
+                                    msg = "The {0} node is required and must be populated in \
                                             order to populate the {1} nodes. \
                                             This data was not imported.".format(
                                                 required_nodes[target_k],
@@ -830,14 +776,12 @@ class CsvReader(Reader):
                                                         "name", flat=True
                                                     )
                                                 ),
-                                            ),
-                                        }
-                                    )
+                                            )
+                                    logger.warn(msg)
+
                         elif bool(tile.tiles):
                             for tile in tile.tiles:
                                 check_required_nodes(tile, parent_tile, required_nodes, all_nodes)
-                    if len(errors) > 0:
-                        self.errors += errors
 
                 resources = []
                 missing_display_values = {}
@@ -870,26 +814,20 @@ class CsvReader(Reader):
 
                     missing_display_nodes = [n for n in display_nodes if n not in row_keys]
                     if len(missing_display_nodes) > 0:
-                        errors = []
                         for mdn in missing_display_nodes:
                             mdn_name = all_nodes.filter(nodeid=mdn).values_list("name", flat=True)[0]
                             try:
                                 missing_display_values[mdn_name].append(row_number.split("on line ")[-1])
-                            except:
-                                missing_display_values[mdn_name] = [row_number.split("on line ")[-1]]
+                            except KeyError:
+                                logger.info(f'{mdn_name} is null or not map on rows {row_number} and participates in a display value function')
 
                     if len(source_data) > 0:
                         if list(source_data[0].keys()):
                             try:
                                 target_resource_model = all_nodes.get(nodeid=list(source_data[0].keys())[0]).graph_id
-                            except ObjectDoesNotExist as e:
-                                print("*" * 80)
-                                print(
-                                    "ERROR: No resource model found. Please make sure the resource model \
-                                    this business data is mapped to has been imported into Arches."
-                                )
-                                print(e)
-                                print("*" * 80)
+                            except ObjectDoesNotExist:
+                                logger.error("No resource model found. Please make sure the resource model \
+                                    this business data is mapped to has been imported into Arches.")
                                 if celery_worker_running is False:  # prevents celery chord from breaking on WorkerLostError
                                     sys.exit()
 
@@ -1028,22 +966,6 @@ class CsvReader(Reader):
                     previous_row_resourceid = row["ResourceID"]
                     legacyid = row["ResourceID"]
 
-                # check for missing display value nodes.
-                errors = []
-                for k, v in missing_display_values.items():
-                    if len(v) > 0:
-                        errors.append(
-                            {
-                                "type": "INFO",
-                                "message": "{0} is null or not mapped on rows {1} and \
-                                participates in a display value function.".format(
-                                    k, ",".join(v)
-                                ),
-                            }
-                        )
-                if len(errors) > 0:
-                    self.errors += errors
-
                 if "legacyid" in locals():
                     self.save_resource(
                         populated_tiles,
@@ -1069,16 +991,6 @@ class CsvReader(Reader):
             if len(formatted):
                 for message in formatted:
                     logger.error(message)
-
-        finally:
-            for e in self.errors:
-                if e["type"] == "WARNING":
-                    logger.warn(e["message"])
-                elif e["type"] == "ERROR":
-                    logger.error(e["message"])
-                else:
-                    logger.info(e["message"])
-
 
 class TileCsvReader(Reader):
     def __init__(self, business_data):
