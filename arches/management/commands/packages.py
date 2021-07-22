@@ -240,6 +240,8 @@ class Command(BaseCommand):
 
         parser.add_argument("--use_multiprocessing", action="store_true", help="enables multiprocessing during data import")
 
+        parser.add_argument("--async_import", action="store_true", help="import resources using Celery if available")
+
     def handle(self, *args, **options):
         print("operation: " + options["operation"])
         package_name = settings.PACKAGE_NAME
@@ -311,6 +313,7 @@ class Command(BaseCommand):
 
         if options["operation"] in ["load", "load_package"]:
             defer_indexing = False if str(options["defer_indexing"])[0].lower() == "f" else True
+            async_import = False if str(options["async_import"])[0].lower() == "f" else True
             self.load_package(
                 options["source"],
                 options["setup_db"],
@@ -319,6 +322,7 @@ class Command(BaseCommand):
                 options["stage"],
                 options["yes"],
                 options["dev"],
+                async_import,
                 defer_indexing,
             )
 
@@ -502,6 +506,7 @@ class Command(BaseCommand):
         stage_concepts="keep",
         yes=False,
         dev=False,
+        async_import=True,
         defer_indexing=True,
     ):
 
@@ -693,7 +698,7 @@ class Command(BaseCommand):
                     print("Aborting operation: Package Load")
                     sys.exit()
 
-            if celery_worker_running:
+            if celery_worker_running and async_import:
                 from celery import chord
                 from arches.app.tasks import import_business_data, package_load_complete, on_chord_error
 
