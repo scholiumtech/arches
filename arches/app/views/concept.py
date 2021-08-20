@@ -102,13 +102,11 @@ def concept(request, conceptid):
     f = request.GET.get("f", "json")
     mode = request.GET.get("mode", "")
     lang = request.GET.get("lang", request.LANGUAGE_CODE)
-    pretty = request.GET.get("pretty", False)
 
     if request.method == "GET":
         include_subconcepts = request.GET.get("include_subconcepts", "true") == "true"
         include_parentconcepts = request.GET.get("include_parentconcepts", "true") == "true"
         include_relatedconcepts = request.GET.get("include_relatedconcepts", "true") == "true"
-        emulate_elastic_search = request.GET.get("emulate_elastic_search", "false") == "true"
         depth_limit = request.GET.get("depth_limit", None)
 
         depth_limit = 1
@@ -365,8 +363,6 @@ def confirm_delete(request, conceptid):
     concepts_to_delete = [
         concept.get_preflabel(lang=lang).value for key, concept in Concept.gather_concepts_to_delete(concept, lang=lang).items()
     ]
-    # return HttpResponse('<div>Showing only 50 of
-    # %s concepts</div><ul><li>%s</ul>' % (len(concepts_to_delete), '<li>'.join(concepts_to_delete[:50]) + ''))
     return HttpResponse("<ul><li>%s</ul>" % ("<li>".join(concepts_to_delete) + ""))
 
 
@@ -433,39 +429,6 @@ def search(request):
                         result["in_scheme_name"] = label["_source"]["value"]
 
             newresults.append(result)
-
-    # Use the db to get the concept context but this is SLOW
-    # for result in results['hits']['hits']:
-    #     if result['_source']['conceptid'] not in ids:
-    #         concept = Concept().get(id=result['_source']['conceptid'], include_parentconcepts=True)
-    #         pathlist = concept.get_paths()
-    #         result['in_scheme_name'] = pathlist[0][0]['label']
-    #         newresults.append(result)
-
-    # def crawl(conceptid, path=[]):
-    #     query = Query(se, start=0, limit=100)
-    #     bool = Bool()
-    #     bool.must(Match(field='conceptto', query=conceptid, type='phrase'))
-    #     bool.must(Match(field='relationtype', query='narrower', type='phrase'))
-    #     query.add_query(bool)
-    #     relations = query.search(index='concept_relations')
-    #     for relation in relations['hits']['hits']:
-    #         path.insert(0, relation)
-    #         crawl(relation['_source']['conceptfrom'], path=path)
-    #     return path
-
-    # for result in results['hits']['hits']:
-    #     if result['_source']['conceptid'] not in ids:
-    #         concept_relations = crawl(result['_source']['conceptid'], path=[])
-    #         if len(concept_relations) > 0:
-    #             conceptid = concept_relations[0]['_source']['conceptfrom']
-    #             if conceptid in cached_scheme_names:
-    #                 result['in_scheme_name'] = cached_scheme_names[conceptid]
-    #             else:
-    #                 result['in_scheme_name'] = get_preflabel_from_conceptid(conceptid, lang=request.LANGUAGE_CODE)['value']
-    #                 cached_scheme_names[conceptid] = result['in_scheme_name']
-
-    #         newresults.append(result)
 
     results["hits"]["hits"] = newresults
     return JSONResponse(results)

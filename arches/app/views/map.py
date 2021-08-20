@@ -20,12 +20,10 @@ from django.shortcuts import render
 from django.http import Http404
 from django.utils.translation import ugettext as _
 from django.utils.decorators import method_decorator
-from guardian.shortcuts import get_users_with_perms, get_groups_with_perms
 from revproxy.views import ProxyView
 from arches.app.models import models
 from arches.app.models.system_settings import settings
-from arches.app.models.card import Card
-from arches.app.views.base import BaseManagerView, MapBaseManagerView
+from arches.app.views.base import MapBaseManagerView
 from arches.app.datatypes.datatypes import DataTypeFactory
 from arches.app.utils.betterJSONSerializer import JSONSerializer, JSONDeserializer
 from arches.app.utils.decorators import group_required

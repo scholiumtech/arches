@@ -2,19 +2,14 @@ import json
 import logging
 import os
 import requests
-import shutil
 import uuid
 from revproxy.views import ProxyView
-from django.core.files.storage import default_storage
-from django.http import HttpRequest
 from django.utils.translation import ugettext as _
 from django.views.generic import View
 from arches.app.utils.response import JSONResponse
 from arches.app.models import models
-from arches.app.models.tile import Tile
 from arches.app.models.system_settings import settings
-from arches.app.utils.betterJSONSerializer import JSONSerializer, JSONDeserializer
-from arches.app.views.search import search_results
+from arches.app.utils.betterJSONSerializer import JSONDeserializer
 
 
 logger = logging.getLogger(__name__)
@@ -155,10 +150,6 @@ class ManifestManagerView(View):
             image_json = self.fetch(file_json_url)
 
             return image_json, new_image_id, file_url
-
-        def get_image_count(manifest):
-            manifest = models.IIIFManifest.objects.get(url=manifest)
-            return len(manifest.manifest["sequences"][0]["canvases"])
 
         def change_manifest_info(manifest, name, desc, attribution, logo):
             if name is not None and name != "":

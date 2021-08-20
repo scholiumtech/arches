@@ -2,27 +2,21 @@ from base64 import b64decode
 import importlib
 import json
 import logging
-import os
 import re
 import sys
 import uuid
 import traceback
-from io import StringIO
 from oauth2_provider.views import ProtectedResourceView
 from pyld.jsonld import compact, frame, from_rdf
 from rdflib import RDF
 from rdflib.namespace import SKOS, DCTERMS
 from revproxy.views import ProxyView
 from slugify import slugify
-from urllib import parse
 from django.contrib.auth import authenticate
-from django.shortcuts import render
 from django.views.generic import View
 from django.db import transaction, connection
 from django.db.models import Q
 from django.http import Http404, HttpResponse
-from django.http.request import QueryDict
-from django.core import management
 from django.core.cache import cache
 from django.forms.models import model_to_dict
 from django.urls import reverse
@@ -42,7 +36,6 @@ from arches.app.views.tile import TileData as TileView
 from arches.app.views.resource import RelatedResourcesView, get_resource_relationship_types
 from arches.app.utils.skos import SKOSWriter
 from arches.app.utils.response import JSONResponse
-from arches.app.utils.decorators import can_read_concept, group_required
 from arches.app.utils.betterJSONSerializer import JSONSerializer, JSONDeserializer
 from arches.app.utils.data_management.resources.exporter import ResourceExporter
 from arches.app.utils.data_management.resources.formats.rdffile import JsonLdReader
@@ -193,7 +186,6 @@ class Surveys(APIBase):
                     cardset.add(str(child_card.cardid))
                     get_child_cardids(child_card, cardset)
 
-            group_ids = list(request.user.groups.values_list("id", flat=True))
             if request.GET.get("status", None) is not None:
                 ret = {}
                 surveys = MobileSurvey.objects.filter(users__in=[request.user]).distinct()
@@ -1113,7 +1105,6 @@ class OntologyProperty(APIBase):
     def get(self, request):
         domain_ontology_class = request.GET.get("domain_ontology_class", None)
         range_ontology_class = request.GET.get("range_ontology_class", None)
-        ontologyid = request.GET.get("ontologyid", "sdl")
 
         ret = []
         if domain_ontology_class and range_ontology_class:

@@ -16,13 +16,11 @@ You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import importlib
 import json as jsonparser
 import logging
 import traceback
 import uuid
 import arches.app.utils.zip as arches_zip
-from arches.app.datatypes.datatypes import DataTypeFactory
 from arches.app.models import models
 from arches.app.models.resource import Resource, ModelInactiveError
 from arches.app.models.tile import Tile, TileValidationError
@@ -35,7 +33,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseNotFound
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic import View
 from django.db import transaction
 from arches.app.models.resource import EditLog
@@ -234,7 +232,6 @@ class TileData(View):
                 user_is_reviewer = user_is_resource_reviewer(request.user)
                 if (user_is_reviewer or tile.is_provisional() is True) and is_active is True:
                     if tile.filter_by_perm(request.user, "delete_nodegroup"):
-                        nodegroup = models.NodeGroup.objects.get(pk=tile.nodegroup_id)
                         if tile.is_provisional() is True and len(list(tile.provisionaledits.keys())) == 1:
                             provisional_editor_id = list(tile.provisionaledits.keys())[0]
                             edit = tile.provisionaledits[provisional_editor_id]

@@ -16,23 +16,18 @@ You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from base64 import b64decode
 from datetime import datetime
 import logging
-import os
 import json
-from django.contrib.auth import authenticate
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.db import connection
-from django.http import HttpResponseNotFound
 from django.shortcuts import render
 from django.utils.translation import ugettext as _
 from arches.app.models import models
 from arches.app.models.concept import Concept
 from arches.app.models.system_settings import settings
 from arches.app.utils.response import JSONResponse, JSONErrorResponse
-from arches.app.datatypes.datatypes import DataTypeFactory
 from arches.app.utils.betterJSONSerializer import JSONSerializer, JSONDeserializer
 from arches.app.search.search_engine_factory import SearchEngineFactory
 from arches.app.search.elasticsearch_dsl_builder import Bool, Match, Query, Nested, Terms, MaxAgg, Aggregation
@@ -48,7 +43,6 @@ import arches.app.utils.task_management as task_management
 import arches.app.tasks as tasks
 from io import StringIO
 from tempfile import NamedTemporaryFile
-from openpyxl import Workbook
 
 logger = logging.getLogger(__name__)
 
@@ -426,13 +420,6 @@ def _buffer(geojson, width=0, unit="ft"):
             res = cursor.fetchone()
             geom = GEOSGeometry(res[0], srid=4326)
     return geom
-
-
-def _get_child_concepts(conceptid):
-    ret = {conceptid}
-    for row in Concept().get_child_concepts(conceptid, ["prefLabel"]):
-        ret.add(row[0])
-    return list(ret)
 
 
 def time_wheel_config(request):

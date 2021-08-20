@@ -17,11 +17,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import json
-import couchdb
 import logging
-import urllib.parse
 from datetime import datetime
-from datetime import timedelta
 from django.db import transaction
 from django.shortcuts import render
 from django.db.models import Count
@@ -30,7 +27,7 @@ from django.contrib.gis.geos import MultiPolygon
 from django.contrib.gis.geos import Polygon
 from django.urls import reverse
 from django.core.mail import EmailMultiAlternatives
-from django.http import HttpRequest, HttpResponseNotFound
+from django.http import HttpResponseNotFound
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.utils.translation import ugettext as _
@@ -40,14 +37,12 @@ from arches.app.utils.betterJSONSerializer import JSONSerializer, JSONDeserializ
 from arches.app.utils.response import JSONResponse, JSONErrorResponse
 from arches.app.utils.decorators import group_required
 from arches.app.utils.geo_utils import GeoUtils
-from arches.app.utils.couch import Couch
 from arches.app.models import models
 from arches.app.models.card import Card
 from arches.app.models.mobile_survey import MobileSurvey
 from arches.app.models.system_settings import settings
 from arches.app.views.base import BaseManagerView
 from arches.app.views.base import MapBaseManagerView
-import arches.app.views.search as search
 
 
 def get_survey_resources(mobile_survey):

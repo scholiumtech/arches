@@ -1,9 +1,7 @@
 from django.views.generic import View
 from arches.app.utils.response import JSONResponse
 from arches.app.models import models
-import copy
 import json
-import logging
 
 
 class NotificationView(View):

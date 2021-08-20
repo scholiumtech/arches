@@ -18,19 +18,15 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import json
 from datetime import datetime
-from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User, Group
 import django.contrib.auth.password_validation as validation
 from django.shortcuts import render
-from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
-from django.views.generic import View
 from arches.app.models import models
 from arches.app.models.card import Card
 from arches.app.models.mobile_survey import MobileSurvey
 from arches.app.models.system_settings import settings
 from arches.app.utils.betterJSONSerializer import JSONSerializer, JSONDeserializer
-from arches.app.utils.decorators import group_required
 from arches.app.views.base import BaseManagerView
 from arches.app.utils.forms import ArchesUserProfileForm
 from arches.app.utils.response import JSONResponse
