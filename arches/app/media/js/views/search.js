@@ -120,6 +120,7 @@ define([
             this.viewModel.sharedStateObject.loading = this.viewModel.loading;
             this.viewModel.sharedStateObject.userCanEditResources = this.viewModel.userCanEditResources;
             this.viewModel.sharedStateObject.userCanReadResources = this.viewModel.userCanReadResources;
+            this.viewModel.sharedStateObject.alert = this.viewModel.alert;
             this.queryString = ko.computed(function() {
                 return JSON.stringify(this.query());
             }, this);

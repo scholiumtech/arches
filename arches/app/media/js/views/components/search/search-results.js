@@ -7,10 +7,12 @@ define(['jquery',
     'knockout',
     'knockout-mapping',
     'models/graph',
+    'viewmodels/alert',
+    'js-cookie',
     'view-data',
     'bootstrap-datetimepicker',
     'plugins/knockout-select2'],
-function($, _, BaseFilter, bootstrap, arches, select2, ko, koMapping, GraphModel, viewdata) {
+function($, _, BaseFilter, bootstrap, arches, select2, ko, koMapping, GraphModel, AlertViewModel, Cookies, viewdata) {
     var componentName = 'search-results';
     return ko.components.register(componentName, {
         viewModel: BaseFilter.extend({
@@ -222,6 +224,45 @@ function($, _, BaseFilter, bootstrap, arches, select2, ko, koMapping, GraphModel
 
             editResource: function(resourceinstance){
                 window.open(arches.urls.resource_editor + resourceinstance.resourceinstanceid);
+            },
+
+            deleteResource: function(resourceinstance) {
+                var self = this;
+                this.alert(
+                    new AlertViewModel('ep-alert-red',
+                        arches.confirmResourceDelete.title,
+                        arches.confirmResourceDelete.text, 
+                        function() {return;}, 
+                        function() {
+                            const url = `${arches.urls.resource}/${resourceinstance.resourceinstanceid}`;
+                            self.loading(true);
+                            window.fetch(url,
+                                {
+                                    method: "DELETE",
+                                    headers: {
+                                        'X-CSRFToken': Cookies.get('csrftoken')
+                                    }
+                                })
+                                .then(function(response){
+                                    if(response.ok){
+                                        return response.json();
+                                    }
+                                }).then(function(){
+                                    let tempQuery = self.query();
+                                    tempQuery.total = tempQuery.total - 1; 
+                                    self.total(tempQuery.total);
+                                    setTimeout(function(){
+                                        self.query(tempQuery);
+                                        /* When self.query changes, the search results are refreshed.
+                                         However, ES has not finished deleting the document, so the deleted resource reappears in the new search results
+                                         This timeout gives ES a little time to finish deleting the document.
+                                         This is really a problem with the python view rather than on this end
+                                        */ 
+                                        self.loading(false);
+                                    }, 500);
+                                });
+                        })
+                );
             },
 
             zoomToFeature: function(evt){
