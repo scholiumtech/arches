@@ -402,6 +402,12 @@ class DateDataType(BaseDataType):
         return value
 
     def append_to_document(self, document, nodevalue, nodeid, tile, provisional=False):
+        try:
+            date_with_timezone = datetime.strptime(nodevalue, "%Y-%m-%dT%H:%M:%S.%f%z")
+            nodevalue = datetime.strftime(date_with_timezone, "%Y-%m-%dT%H:%M:%S")
+        except ValueError as e:
+            pass
+
         document["dates"].append(
             {"date": ExtendedDateFormat(nodevalue).lower, "nodegroup_id": tile.nodegroup_id, "nodeid": nodeid, "provisional": provisional}
         )
