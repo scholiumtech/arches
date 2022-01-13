@@ -6,10 +6,11 @@ define([
     'report-templates',
     'models/report',
     'models/graph',
-    'viewmodels/card',
-], function(arches, $, _, ko, reportLookup, ReportModel, GraphModel, CardViewModel) {
+    'viewmodels/card'
+], function(arches, $, _, ko, reportLookup, ReportModel, GraphModel) {
     var ResourceReportAbstract = function(params) {
         var self = this;
+        var CardViewModel = require('viewmodels/card');
 
         this.loading = ko.observable(true);
 
@@ -25,20 +26,23 @@ define([
 
         this.initialize = function() {
             var url;
+            params.cache = params.cache === undefined ? true : params.cache;
 
             if (params.report) {
                 if (
-                    !params.disableDisambiguatedReport
+                    (!params.disableDisambiguatedReport
                     && !params.report.report_json 
-                    && params.report.attributes.resourceid
+                    && params?.report?.attributes?.resourceid) 
+                    || !params.cache
                 ) {
-                    url = arches.urls.api_bulk_disambiguated_resource_instance + `?resource_ids=${params.report.attributes.resourceid}`;
+                    url = arches.urls.api_bulk_disambiguated_resource_instance + `?v=beta&resource_ids=${params.report.attributes.resourceid != '' ? params.report.attributes.resourceid : window.location.pathname.split("/")[2]}`;
                     if(params.report.defaultConfig?.uncompacted_reporting) {
                         url += '&uncompacted=true';
                     }
 
                     $.getJSON(url, function(resp) {
-                        params.report.report_json = resp[params.report.attributes.resourceid];
+                        const resourceId = params.report.attributes.resourceid != '' ? params.report.attributes.resourceid : window.location.pathname.split("/")?.[2];
+                        params.report.report_json = resp?.[resourceId];
     
                         self.template(reportLookup[params.report.templateId()]);
                         self.report(params.report);
@@ -53,12 +57,11 @@ define([
                 }
             } 
             else if (self.resourceid) {
-                url = arches.urls.api_resource_report(self.resourceid);
+                url = arches.urls.api_resource_report(self.resourceid) + "?v=beta&uncompacted=true";
 
                 self.fetchResourceData(url).then(function(responseJson) {
                     var template = responseJson.template;
                     self.template(template);
-                    
                     if (template.preload_resource_data) {
                         self.preloadResourceData(responseJson);
                     }
@@ -130,16 +133,7 @@ define([
             self.report(report);
         };
 
-        if (!CardViewModel) {
-            require(['viewmodels/card'], function(cardViewModel) { 
-                CardViewModel = cardViewModel; 
-                
-                self.initialize();
-            });
-        }
-        else {
-            self.initialize();
-        }
+        self.initialize();
     };
     ko.components.register('resource-report-abstract', {
         viewModel: ResourceReportAbstract,

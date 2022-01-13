@@ -149,9 +149,19 @@ class LabelBasedGraph_FromResourceTests(TestCase):
     @classmethod
     def setUp(cls):
         cls.VALUE_KEY = "@display_value"
-        cls.nodegroup = models.NodeGroup()
+
+        cls.RESOURCE_KEY = "resource"
+        cls.DISPLAY_DESCRIPTION_KEY = "displaydescription"
+        cls.DISPLAY_NAME_KEY = "displayname"
+        cls.GRAPH_ID_KEY = "graph_id"
+        cls.LEGACY_ID_KEY = "legacyid"
+        cls.MAP_POPUP_KEY = "map_popup"
+        cls.RESOURCE_INSTANCE_ID_KEY = "resourceinstanceid"
+
+        cls.parent_nodegroup = models.NodeGroup()
+        cls.nodegroup = models.NodeGroup(parentnodegroup=cls.parent_nodegroup)
         cls.grouping_node = models.Node(datatype="semantic", name="Test Node Grouping", nodegroup=cls.nodegroup)
-        cls.string_node = models.Node(datatype="string", name="Test Node")
+        cls.string_node = models.Node(datatype="string", name="Test Node", nodegroup=cls.nodegroup)
         cls.grouping_tile = models.TileModel(data={}, nodegroup_id=str(cls.grouping_node.pk))
         cls.string_tile = models.TileModel(data={str(cls.string_node.pk): "value_1"}, nodegroup_id=str(cls.string_node.pk))
 
@@ -165,7 +175,18 @@ class LabelBasedGraph_FromResourceTests(TestCase):
     def test_smoke(self, mock_Node, mock_NodeGroup):
         label_based_graph = LabelBasedGraph.from_resource(resource=self.test_resource, compact=False, hide_empty_nodes=False)
 
-        self.assertEqual(label_based_graph, {})
+        self.assertEqual(
+            label_based_graph,
+            {
+                self.DISPLAY_DESCRIPTION_KEY: mock.ANY,
+                self.DISPLAY_NAME_KEY: mock.ANY,
+                self.GRAPH_ID_KEY: mock.ANY,
+                self.LEGACY_ID_KEY: mock.ANY,
+                self.MAP_POPUP_KEY: mock.ANY,
+                self.RESOURCE_INSTANCE_ID_KEY: mock.ANY,
+                self.RESOURCE_KEY: {},
+            },
+        )
 
     def test_handles_node_with_single_value(self, mock_Node, mock_NodeGroup):
         mock_Node.objects.get.return_value = self.string_node
@@ -180,11 +201,19 @@ class LabelBasedGraph_FromResourceTests(TestCase):
         self.assertEqual(
             label_based_graph,
             {
-                self.string_node.name: {
-                    NODE_ID_KEY: str(self.string_node.pk),
-                    TILE_ID_KEY: str(self.string_tile.pk),
-                    self.VALUE_KEY: self.string_tile.data[str(self.string_node.pk)],
+                self.RESOURCE_KEY: {
+                    self.string_node.name: {
+                        NODE_ID_KEY: str(self.string_node.pk),
+                        TILE_ID_KEY: str(self.string_tile.pk),
+                        self.VALUE_KEY: self.string_tile.data[str(self.string_node.pk)],
+                    },
                 },
+                self.DISPLAY_DESCRIPTION_KEY: mock.ANY,
+                self.DISPLAY_NAME_KEY: mock.ANY,
+                self.GRAPH_ID_KEY: mock.ANY,
+                self.LEGACY_ID_KEY: mock.ANY,
+                self.MAP_POPUP_KEY: mock.ANY,
+                self.RESOURCE_INSTANCE_ID_KEY: mock.ANY,
             },
         )
 
@@ -204,18 +233,26 @@ class LabelBasedGraph_FromResourceTests(TestCase):
         self.assertEqual(
             label_based_graph,
             {
-                self.string_node.name: [
-                    {
-                        NODE_ID_KEY: str(self.string_node.pk),
-                        TILE_ID_KEY: str(self.string_tile.pk),
-                        self.VALUE_KEY: self.string_tile.data[str(self.string_node.pk)],
-                    },
-                    {
-                        NODE_ID_KEY: str(self.string_node.pk),
-                        TILE_ID_KEY: str(duplicate_node_tile.pk),
-                        self.VALUE_KEY: duplicate_node_tile.data[str(self.string_node.pk)],
-                    },
-                ],
+                self.RESOURCE_KEY: {
+                    self.string_node.name: [
+                        {
+                            NODE_ID_KEY: str(self.string_node.pk),
+                            TILE_ID_KEY: str(self.string_tile.pk),
+                            self.VALUE_KEY: self.string_tile.data[str(self.string_node.pk)],
+                        },
+                        {
+                            NODE_ID_KEY: str(self.string_node.pk),
+                            TILE_ID_KEY: str(duplicate_node_tile.pk),
+                            self.VALUE_KEY: duplicate_node_tile.data[str(self.string_node.pk)],
+                        },
+                    ],
+                },
+                self.DISPLAY_DESCRIPTION_KEY: mock.ANY,
+                self.DISPLAY_NAME_KEY: mock.ANY,
+                self.GRAPH_ID_KEY: mock.ANY,
+                self.LEGACY_ID_KEY: mock.ANY,
+                self.MAP_POPUP_KEY: mock.ANY,
+                self.RESOURCE_INSTANCE_ID_KEY: mock.ANY,
             },
         )
 
@@ -232,10 +269,18 @@ class LabelBasedGraph_FromResourceTests(TestCase):
         self.assertEqual(
             label_based_graph,
             {
-                self.grouping_node.name: {
-                    NODE_ID_KEY: str(self.grouping_node.pk),
-                    TILE_ID_KEY: str(self.grouping_tile.pk),
+                self.RESOURCE_KEY: {
+                    self.grouping_node.name: {
+                        NODE_ID_KEY: str(self.grouping_node.pk),
+                        TILE_ID_KEY: str(self.grouping_tile.pk),
+                    },
                 },
+                self.DISPLAY_DESCRIPTION_KEY: mock.ANY,
+                self.DISPLAY_NAME_KEY: mock.ANY,
+                self.GRAPH_ID_KEY: mock.ANY,
+                self.LEGACY_ID_KEY: mock.ANY,
+                self.MAP_POPUP_KEY: mock.ANY,
+                self.RESOURCE_INSTANCE_ID_KEY: mock.ANY,
             },
         )
 
@@ -255,15 +300,23 @@ class LabelBasedGraph_FromResourceTests(TestCase):
         self.assertEqual(
             label_based_graph,
             {
-                self.grouping_node.name: {
-                    NODE_ID_KEY: str(self.grouping_node.pk),
-                    TILE_ID_KEY: str(self.grouping_tile.pk),
-                    self.string_node.name: {
-                        NODE_ID_KEY: str(self.string_node.pk),
+                self.RESOURCE_KEY: {
+                    self.grouping_node.name: {
+                        NODE_ID_KEY: str(self.grouping_node.pk),
                         TILE_ID_KEY: str(self.grouping_tile.pk),
-                        self.VALUE_KEY: self.grouping_tile.data[str(self.string_node.pk)],
+                        self.string_node.name: {
+                            NODE_ID_KEY: str(self.string_node.pk),
+                            TILE_ID_KEY: str(self.grouping_tile.pk),
+                            self.VALUE_KEY: self.grouping_tile.data[str(self.string_node.pk)],
+                        },
                     },
                 },
+                self.DISPLAY_DESCRIPTION_KEY: mock.ANY,
+                self.DISPLAY_NAME_KEY: mock.ANY,
+                self.GRAPH_ID_KEY: mock.ANY,
+                self.LEGACY_ID_KEY: mock.ANY,
+                self.MAP_POPUP_KEY: mock.ANY,
+                self.RESOURCE_INSTANCE_ID_KEY: mock.ANY,
             },
         )
 
@@ -286,14 +339,96 @@ class LabelBasedGraph_FromResourceTests(TestCase):
         self.assertEqual(
             label_based_graph,
             {
-                self.grouping_node.name: {
-                    NODE_ID_KEY: str(self.grouping_node.pk),
-                    TILE_ID_KEY: str(self.grouping_tile.pk),
-                    self.string_node.name: {
-                        NODE_ID_KEY: str(self.string_node.pk),
-                        TILE_ID_KEY: str(self.string_tile.pk),
-                        self.VALUE_KEY: self.string_tile.data[str(self.string_node.pk)],
+                self.RESOURCE_KEY: {
+                    self.grouping_node.name: {
+                        NODE_ID_KEY: str(self.grouping_node.pk),
+                        TILE_ID_KEY: str(self.grouping_tile.pk),
+                        self.string_node.name: {
+                            NODE_ID_KEY: str(self.string_node.pk),
+                            TILE_ID_KEY: str(self.string_tile.pk),
+                            self.VALUE_KEY: self.string_tile.data[str(self.string_node.pk)],
+                        },
                     },
                 },
+                self.DISPLAY_DESCRIPTION_KEY: mock.ANY,
+                self.DISPLAY_NAME_KEY: mock.ANY,
+                self.GRAPH_ID_KEY: mock.ANY,
+                self.LEGACY_ID_KEY: mock.ANY,
+                self.MAP_POPUP_KEY: mock.ANY,
+                self.RESOURCE_INSTANCE_ID_KEY: mock.ANY,
+            },
+        )
+
+    def test_handles_node_grouped_in_separate_card_with_cardinality_n(self, mock_Node, mock_NodeGroup):
+        mock_Node.objects.get.side_effect = [self.grouping_node, self.string_node]
+        mock_NodeGroup.objects.filter.return_value.values.return_value = [
+            {"nodegroupid": self.grouping_tile.nodegroup_id, "cardinality": "1"},
+            {"nodegroupid": self.string_tile.nodegroup_id, "cardinality": "n"},
+        ]
+
+        self.grouping_node.get_direct_child_nodes = mock.Mock(return_value=[self.string_node])
+
+        self.string_tile.parenttile = self.grouping_tile
+
+        self.test_resource.tiles.append(self.grouping_tile)
+        self.test_resource.tiles.append(self.string_tile)
+
+        label_based_graph = LabelBasedGraph.from_resource(resource=self.test_resource, compact=False, hide_empty_nodes=False)
+
+        self.assertEqual(
+            label_based_graph,
+            {
+                self.RESOURCE_KEY: {
+                    self.grouping_node.name: {
+                        NODE_ID_KEY: str(self.grouping_node.pk),
+                        TILE_ID_KEY: str(self.grouping_tile.pk),
+                        self.string_node.name: [
+                            {
+                                NODE_ID_KEY: str(self.string_node.pk),
+                                TILE_ID_KEY: str(self.string_tile.pk),
+                                self.VALUE_KEY: self.string_tile.data[str(self.string_node.pk)],
+                            }
+                        ],
+                    },
+                },
+                self.DISPLAY_DESCRIPTION_KEY: mock.ANY,
+                self.DISPLAY_NAME_KEY: mock.ANY,
+                self.GRAPH_ID_KEY: mock.ANY,
+                self.LEGACY_ID_KEY: mock.ANY,
+                self.MAP_POPUP_KEY: mock.ANY,
+                self.RESOURCE_INSTANCE_ID_KEY: mock.ANY,
+            },
+        )
+
+    def test_handles_empty_node_grouped_in_separate_card_with_cardinality_n(self, mock_Node, mock_NodeGroup):
+        mock_Node.objects.get.side_effect = [self.grouping_node, self.string_node]
+        mock_NodeGroup.objects.filter.return_value.values.return_value = [
+            {"nodegroupid": self.grouping_tile.nodegroup_id, "cardinality": "1"},
+            {"nodegroupid": self.string_tile.nodegroup_id, "cardinality": "n"},
+        ]
+
+        self.grouping_node.get_direct_child_nodes = mock.Mock(return_value=[self.string_node])
+
+        self.string_tile.parenttile = self.grouping_tile
+
+        self.test_resource.tiles.append(self.grouping_tile)
+
+        label_based_graph = LabelBasedGraph.from_resource(resource=self.test_resource, compact=False, hide_empty_nodes=False)
+
+        self.assertEqual(
+            label_based_graph,
+            {
+                self.RESOURCE_KEY: {
+                    self.grouping_node.name: {
+                        NODE_ID_KEY: str(self.grouping_node.pk),
+                        TILE_ID_KEY: str(self.grouping_tile.pk),
+                    },
+                },
+                self.DISPLAY_DESCRIPTION_KEY: mock.ANY,
+                self.DISPLAY_NAME_KEY: mock.ANY,
+                self.GRAPH_ID_KEY: mock.ANY,
+                self.LEGACY_ID_KEY: mock.ANY,
+                self.MAP_POPUP_KEY: mock.ANY,
+                self.RESOURCE_INSTANCE_ID_KEY: mock.ANY,
             },
         )
