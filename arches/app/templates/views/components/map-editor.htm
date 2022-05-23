@@ -84,14 +84,6 @@
                     mode: { name: 'javascript', json: true },
                     lineNumbers: true
                 }"></div>
-                <div class="display-in-workflow-step install-buttons">
-                    <button class="btn btn-shim btn-danger btn-labeled btn-lg fa fa-times" data-bind="click: function () {
-                        geoJSONString(undefined);
-                    }">{% trans 'Cancel' %}</button>
-                    <button class="btn btn-shim btn-labeled btn-lg fa fa-plus btn-mint" data-bind="css: {
-                        disabled: geoJSONErrors().length !== 0
-                    }, click: updateGeoJSON">{% trans 'Update Features' %}</button>
-                </div>
                 <!-- ko if: geoJSONErrors().length !== 0 -->
                 <div class="geojson-error-list">
                     {% trans "GeoJSON has the following errors that must be resolved:" %}
@@ -345,6 +337,16 @@
         </div>
     </div>
     </div>
+<!-- ko if: geoJSONString() -->
+<div class="display-in-workflow-step">
+    <button class="btn btn-shim btn-danger btn-labeled btn-lg fa fa-times" data-bind="click: function () {
+        geoJSONString(undefined);
+    }">{% trans 'Cancel' %}</button>
+    <button class="btn btn-shim btn-labeled btn-lg fa fa-plus btn-mint" data-bind="css: {
+        disabled: geoJSONErrors().length !== 0
+    }, click: updateGeoJSON">{% trans 'Update Features' %}</button>
+</div>
+<!-- /ko -->
 <!--/ko -->
 {{ block.super }}
 {% endblock sidepanel %}
