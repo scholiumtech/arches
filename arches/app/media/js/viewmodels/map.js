@@ -461,7 +461,7 @@ define([
 
         this.setupMap = function(map) {
             map.on('load', function() {
-                require(['mapbox-gl', 'mapbox-gl-geocoder'], function(MapboxGl, MapboxGeocoder) {
+                require(['maplibre-gl', 'mapbox-gl-geocoder'], function(MapboxGl, MapboxGeocoder) {
                     map.addControl(new MapboxGl.NavigationControl(), 'top-left');
                     map.addControl(new MapboxGl.FullscreenControl({
                         container: $(map.getContainer()).closest('.workbench-card-wrapper')[0]
