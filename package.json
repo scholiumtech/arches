@@ -116,7 +116,7 @@
         "blueimp-gallery": "node_modules/blueimp-gallery/js/blueimp-gallery.min",
         "blueimp-jquery": "node_modules/blueimp-gallery/js/jquery.blueimp-gallery.min",
         "blueimp-helper": "node_modules/blueimp-gallery/js/blueimp-helper.min",
-        "datatables.net": "node_modules/datatables.net/js/jquery.dataTables.min",
+        "datatables.net": "node_modules/datatables.net/js/dataTables.min",
         "datatables.net-bs": "node_modules/datatables.net-bs/js/dataTables.bootstrap.min",
         "datatables.net-buttons": "node_modules/datatables.net-buttons/js/dataTables.buttons.min",
         "datatables.net-buttons-print": "node_modules/datatables.net-buttons/js/buttons.print.min",
