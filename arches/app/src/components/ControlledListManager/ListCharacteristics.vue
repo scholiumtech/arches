@@ -58,6 +58,7 @@ const { $gettext } = useGettext();
 }
 
 h3 {
+    margin: 0;
     font-size: 1.5rem;
 }
 
