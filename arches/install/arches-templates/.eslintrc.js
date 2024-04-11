@@ -3,6 +3,7 @@ module.exports = {
         "eslint:recommended",
         'plugin:@typescript-eslint/recommended',
         'plugin:vue/vue3-recommended',
+        "prettier"
     ],
     "root": true,
     "env": {
@@ -32,16 +33,12 @@ module.exports = {
         "URLSearchParams": false,
         "fetch": false
     },
-    "ignorePatterns": [".eslintrc.js", "**/media/plugins/*"],
     "rules": {
         "semi": ["error", "always"],
     },
     "overrides": [
         {
             "files": [ "*.vue" ],
-            "rules": {
-                "vue/html-indent": [2, 4],
-            }
         },
         {
             "files": [ "*.js" ],
