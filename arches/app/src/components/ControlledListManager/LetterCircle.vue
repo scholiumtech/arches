@@ -1,31 +1,35 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import type { ControlledList, ControlledListItem, Selectable } from "@/types/ControlledListManager";
+import type {
+    ControlledList,
+    ControlledListItem,
+    Selectable,
+} from "@/types/ControlledListManager";
 
 const props: { labelled: Selectable } = defineProps(["labelled"]);
 
 const color = computed(() => {
     if ((props.labelled as ControlledList).search_only !== undefined) {
-        return 'midnightblue';
+        return "midnightblue";
     }
     const item = props.labelled as ControlledListItem;
     if (item.guide) {
-        return 'bisque';
+        return "bisque";
     }
-    return 'darkorchid';
+    return "darkorchid";
 });
 
 const letter = computed(() => {
     // not translated...
     if ((props.labelled as ControlledList).search_only !== undefined) {
-        return 'L';
+        return "L";
     }
     const item = props.labelled as ControlledListItem;
     if (item.guide) {
-        return 'G';
+        return "G";
     }
-    return 'I';
+    return "I";
 });
 </script>
 

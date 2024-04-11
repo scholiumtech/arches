@@ -13,10 +13,7 @@ import { upsertLabel } from "@/components/ControlledListManager/api.ts";
 import { itemKey } from "@/components/ControlledListManager/const.ts";
 
 import type { Ref } from "@/types/Ref";
-import type {
-    Label,
-    NewLabel,
-} from "@/types/ControlledListManager";
+import type { Label, NewLabel } from "@/types/ControlledListManager";
 
 const props: {
     header: string;
@@ -84,7 +81,8 @@ const onSave = async () => {
             <span
                 id="language-label"
                 style="margin-bottom: 5px"
-            >{{ $gettext("Language") }}</span>
+                >{{ $gettext("Language") }}</span
+            >
             <Dropdown
                 v-model="language"
                 aria-labelledby="language-label"
@@ -92,7 +90,9 @@ const onSave = async () => {
                 option-label="name"
                 option-value="code"
                 :pt="{
-                    input: { style: { fontFamily: 'inherit', fontSize: 'small' } },
+                    input: {
+                        style: { fontFamily: 'inherit', fontSize: 'small' },
+                    },
                     panel: { style: { fontSize: 'small' } },
                 }"
             />
@@ -102,7 +102,10 @@ const onSave = async () => {
                 type="button"
                 class="delete"
                 :label="$gettext('Cancel edit')"
-                @click="visible = false; value = props.label.value"
+                @click="
+                    visible = false;
+                    value = props.label.value;
+                "
             />
             <Button
                 type="button"
@@ -122,7 +125,8 @@ const onSave = async () => {
     margin-bottom: 2rem;
     font-size: small;
 }
-label, .p.dropdown-label {
+label,
+.p.dropdown-label {
     font-size: small;
     color: #2d3c4b;
 }

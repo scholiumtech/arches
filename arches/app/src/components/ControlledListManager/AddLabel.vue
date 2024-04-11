@@ -5,12 +5,13 @@ import { useGettext } from "vue3-gettext";
 
 import EditLabel from "@/components/ControlledListManager/EditLabel.vue";
 
-import { itemKey, ALT_LABEL, PREF_LABEL } from "@/components/ControlledListManager/const.ts";
+import {
+    itemKey,
+    ALT_LABEL,
+    PREF_LABEL,
+} from "@/components/ControlledListManager/const.ts";
 
-import type {
-    NewLabel,
-    ValueType,
-} from "@/types/ControlledListManager";
+import type { NewLabel, ValueType } from "@/types/ControlledListManager";
 
 const props: { type: ValueType } = defineProps(["type"]);
 const { item } = inject(itemKey);
@@ -25,7 +26,7 @@ const newLabel: NewLabel = computed(() => {
         id: null,
         valuetype: props.type,
         language: arches.activeLanguage,
-        value: '',
+        value: "",
         item_id: item.value.id,
     };
 });

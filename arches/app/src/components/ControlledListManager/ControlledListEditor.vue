@@ -12,9 +12,15 @@ import ItemEditor from "@/components/ControlledListManager/ItemEditor.vue";
 import ListCharacteristics from "@/components/ControlledListManager/ListCharacteristics.vue";
 import ListHeader from "@/components/ControlledListManager/ListHeader.vue";
 import ListTree from "@/components/ControlledListManager/ListTree.vue";
-import { displayedRowKey, selectedLanguageKey } from "@/components/ControlledListManager/const.ts";
+import {
+    displayedRowKey,
+    selectedLanguageKey,
+} from "@/components/ControlledListManager/const.ts";
 
-import type { ControlledListItem, Selectable } from "@/types/ControlledListManager";
+import type {
+    ControlledListItem,
+    Selectable,
+} from "@/types/ControlledListManager";
 import type { Language } from "@/types/arches";
 import type { Ref } from "@/types/Ref";
 
@@ -32,7 +38,9 @@ function setDisplayedRow(val: Selectable | null) {
 provide(displayedRowKey, { displayedRow, setDisplayedRow });
 
 const selectedLanguage: Ref<Language> = ref(
-    (arches.languages as Language[]).find(l => l.code === arches.activeLanguage)
+    (arches.languages as Language[]).find(
+        (l) => l.code === arches.activeLanguage,
+    ),
 );
 provide(selectedLanguageKey, selectedLanguage);
 
@@ -61,7 +69,9 @@ const listOrItemView = computed(() => {
                 :size="40"
                 :min-size="25"
                 :pt="{
-                    root: { style: { display: 'flex', flexDirection: 'column' } },
+                    root: {
+                        style: { display: 'flex', flexDirection: 'column' },
+                    },
                 }"
             >
                 <Suspense>

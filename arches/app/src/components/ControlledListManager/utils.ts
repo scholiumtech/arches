@@ -6,20 +6,19 @@ import type {
 import type { TreeNode } from "primevue/tree/Tree";
 
 export const bestLabel = (item: ControlledListItem, languageCode: string) => {
-    const labelsInLang = item.labels.filter(l => l.language === languageCode);
-    const bestLabel = (
-        labelsInLang.find(l => l.valuetype === "prefLabel")
-        ?? labelsInLang.find(l => l.valuetype === "altLabel")
-        ?? item.labels.find(l => l.valuetype === "prefLabel")
-    );
+    const labelsInLang = item.labels.filter((l) => l.language === languageCode);
+    const bestLabel =
+        labelsInLang.find((l) => l.valuetype === "prefLabel") ??
+        labelsInLang.find((l) => l.valuetype === "altLabel") ??
+        item.labels.find((l) => l.valuetype === "prefLabel");
     if (!bestLabel) {
         throw new Error();
     }
     return bestLabel;
 };
 
-export const findItemInTree = (tree: typeof TreeNode[], itemId: string) => {
-    function recurse (items: typeof TreeNode[]) : typeof TreeNode | undefined {
+export const findItemInTree = (tree: (typeof TreeNode)[], itemId: string) => {
+    function recurse(items: (typeof TreeNode)[]): typeof TreeNode | undefined {
         for (const item of items) {
             if (item.data.id === itemId) {
                 return item;
@@ -43,7 +42,9 @@ export const itemAsNode = (
     return {
         key: item.id,
         label: bestLabel(item, selectedLanguage.code).value,
-        children: item.children.map(child => itemAsNode(child, selectedLanguage)),
+        children: item.children.map((child) =>
+            itemAsNode(child, selectedLanguage),
+        ),
         data: item,
     };
 };
@@ -55,8 +56,8 @@ export const listAsNode = (
     return {
         key: list.id,
         label: list.name,
-        children: list.items.map(
-            (item: ControlledListItem) => itemAsNode(item, selectedLanguage)
+        children: list.items.map((item: ControlledListItem) =>
+            itemAsNode(item, selectedLanguage),
         ),
         data: list,
     };

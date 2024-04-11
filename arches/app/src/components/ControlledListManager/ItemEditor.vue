@@ -6,7 +6,13 @@ import ItemCharacteristic from "@/components/ControlledListManager/ItemCharacter
 import LabelEditor from "@/components/ControlledListManager/LabelEditor.vue";
 import LetterCircle from "@/components/ControlledListManager/LetterCircle.vue";
 
-import { displayedRowKey, selectedLanguageKey, ALT_LABEL, PREF_LABEL, URI } from "@/components/ControlledListManager/const.ts";
+import {
+    displayedRowKey,
+    selectedLanguageKey,
+    ALT_LABEL,
+    PREF_LABEL,
+    URI,
+} from "@/components/ControlledListManager/const.ts";
 import { itemKey } from "@/components/ControlledListManager/const.ts";
 import { bestLabel } from "@/components/ControlledListManager/utils.ts";
 
@@ -18,17 +24,23 @@ const selectedLanguage = inject(selectedLanguageKey);
 const { $gettext } = useGettext();
 
 const appendItemLabel = computed(() => {
-    return (newLabel: Label) => { item.value.labels.push(newLabel); };
+    return (newLabel: Label) => {
+        item.value.labels.push(newLabel);
+    };
 });
 const removeItemLabel = computed(() => {
     return (removedLabel: Label) => {
-        const toDelete = item.value.labels.findIndex((l: Label) => l.id === removedLabel.id);
+        const toDelete = item.value.labels.findIndex(
+            (l: Label) => l.id === removedLabel.id,
+        );
         item.value.labels.splice(toDelete, 1);
     };
 });
 const updateItemLabel = computed(() => {
     return (updatedLabel: Label) => {
-        const toUpdate = item.value.labels.find((l: Label) => l.id === updatedLabel.id);
+        const toUpdate = item.value.labels.find(
+            (l: Label) => l.id === updatedLabel.id,
+        );
         toUpdate.language = updatedLabel.language;
         toUpdate.value = updatedLabel.value;
     };

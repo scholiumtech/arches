@@ -3,13 +3,16 @@ import { computed, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import EditLabel from "@/components/ControlledListManager/EditLabel.vue";
-import { ALT_LABEL, PREF_LABEL } from "@/components/ControlledListManager/const.ts";
+import {
+    ALT_LABEL,
+    PREF_LABEL,
+} from "@/components/ControlledListManager/const.ts";
 
 import type { Label } from "@/types/ControlledListManager";
 
 const props: {
-    label: Label,
-    onDelete: (labelId: Label) => Promise<void>,
+    label: Label;
+    onDelete: (labelId: Label) => Promise<void>;
 } = defineProps(["label", "onDelete"]);
 
 const modalVisible = ref(false);

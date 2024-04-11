@@ -4,7 +4,10 @@ import Cookies from "js-cookie";
 import { computed, inject } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import { displayedRowKey, selectedLanguageKey } from "@/components/ControlledListManager/const.ts";
+import {
+    displayedRowKey,
+    selectedLanguageKey,
+} from "@/components/ControlledListManager/const.ts";
 import {
     findItemInTree,
     itemAsNode,
@@ -17,11 +20,15 @@ import Dropdown from "primevue/dropdown";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 
-import type { TreeExpandedKeys, TreeSelectionKeys, TreeNode } from "primevue/tree/Tree";
+import type {
+    TreeExpandedKeys,
+    TreeSelectionKeys,
+    TreeNode,
+} from "primevue/tree/Tree";
 import type { Ref } from "@/types/Ref";
 import type { ControlledList, NewItem } from "@/types/ControlledListManager";
 
-const ERROR = "error";  // not user-facing
+const ERROR = "error"; // not user-facing
 
 const { setDisplayedRow } = inject(displayedRowKey);
 const selectedLanguage = inject(selectedLanguageKey);
@@ -71,9 +78,9 @@ const fetchLists = async () => {
             throw new Error();
         } else {
             await response.json().then((data) => {
-                controlledListItemsTree.value = (data.controlled_lists as ControlledList[]).map(
-                    l => listAsNode(l, selectedLanguage.value)
-                );
+                controlledListItemsTree.value = (
+                    data.controlled_lists as ControlledList[]
+                ).map((l) => listAsNode(l, selectedLanguage.value));
             });
         }
     } catch {
@@ -118,8 +125,13 @@ const addChild = async (parent_id: string) => {
         });
         if (response.ok) {
             const newItem = await response.json();
-            const parent = findItemInTree(controlledListItemsTree.value, parent_id);
-            parent.children.unshift(itemAsNode(newItem, selectedLanguage.value));
+            const parent = findItemInTree(
+                controlledListItemsTree.value,
+                parent_id,
+            );
+            parent.children.unshift(
+                itemAsNode(newItem, selectedLanguage.value),
+            );
             if (parent.data.name) {
                 // Parent node is a list
                 parent.data.items.unshift(newItem);
@@ -152,7 +164,7 @@ const deleteLists = async (listIds: string[]) => {
             headers: {
                 "X-CSRFToken": Cookies.get("csrftoken"),
             },
-        })
+        }),
     );
 
     try {
@@ -188,7 +200,7 @@ const deleteItems = async (itemIds: string[]) => {
             headers: {
                 "X-CSRFToken": Cookies.get("csrftoken"),
             },
-        })
+        }),
     );
 
     try {
@@ -213,7 +225,6 @@ const deleteItems = async (itemIds: string[]) => {
         });
     }
 };
-
 
 const addLabel = computed(() => {
     const selectedKeysList = Object.keys(selectedKeys.value);
@@ -242,12 +253,14 @@ const deleteSelected = async () => {
     }
     const deletes = Object.keys(selectedKeys.value);
     if (deletes.length !== 1) {
-        throw new Error('Mass deletion not yet implemented.');
+        throw new Error("Mass deletion not yet implemented.");
     }
     const toDelete = deletes[0];
     selectedKeys.value = {};
 
-    const allListIds = controlledListItemsTree.value.map((node: typeof TreeNode) => node.data.id);
+    const allListIds = controlledListItemsTree.value.map(
+        (node: typeof TreeNode) => node.data.id,
+    );
     if (allListIds.includes(toDelete)) {
         await deleteLists(deletes);
     } else {
@@ -325,7 +338,14 @@ await fetchLists();
             :highlight-on-select="false"
             :pt="{
                 root: { class: 'secondary-button' },
-                input: { style: { fontFamily: 'inherit', fontSize: 'small', textAlign: 'center', alignContent: 'center' } },
+                input: {
+                    style: {
+                        fontFamily: 'inherit',
+                        fontSize: 'small',
+                        textAlign: 'center',
+                        alignContent: 'center',
+                    },
+                },
                 itemLabel: { style: { fontSize: 'small' } },
             }"
         />

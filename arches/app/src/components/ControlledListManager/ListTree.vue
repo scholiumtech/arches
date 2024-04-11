@@ -8,9 +8,16 @@ import { useToast } from "primevue/usetoast";
 
 import LetterCircle from "@/components/ControlledListManager/LetterCircle.vue";
 import ListTreeControls from "@/components/ControlledListManager/ListTreeControls.vue";
-import { displayedRowKey, selectedLanguageKey } from "@/components/ControlledListManager/const.ts";
+import {
+    displayedRowKey,
+    selectedLanguageKey,
+} from "@/components/ControlledListManager/const.ts";
 import { postListToServer } from "@/components/ControlledListManager/api.ts";
-import { bestLabel, findItemInTree, listAsNode } from "@/components/ControlledListManager/utils.ts";
+import {
+    bestLabel,
+    findItemInTree,
+    listAsNode,
+} from "@/components/ControlledListManager/utils.ts";
 
 import type { Ref } from "@/types/Ref";
 import type {
@@ -24,7 +31,7 @@ import type {
     ControlledListItem,
 } from "@/types/ControlledListManager";
 
-const tree: Ref<typeof TreeNode[]> = ref([]);
+const tree: Ref<(typeof TreeNode)[]> = ref([]);
 const selectedKeys: Ref<typeof TreeSelectionKeys> = ref({});
 const expandedKeys: Ref<typeof TreeExpandedKeys> = ref({});
 
@@ -53,8 +60,9 @@ const onRowSelect = (node: typeof TreeNode) => {
         [node.key]: true,
     };
     if (node.data.name) {
-        tree.value.filter(list => list.data.id !== node.data.id)
-            .forEach(list => collapseNodesRecursive(list));
+        tree.value
+            .filter((list) => list.data.id !== node.data.id)
+            .forEach((list) => collapseNodesRecursive(list));
     }
 };
 
@@ -89,13 +97,14 @@ const onReorder = async (item: ControlledListItem, up: boolean) => {
     in the JSON data.
     */
 
-    const list: ControlledList = findItemInTree(tree.value, item.controlled_list_id).data;
+    const list: ControlledList = findItemInTree(
+        tree.value,
+        item.controlled_list_id,
+    ).data;
 
-    const siblings: ControlledListItem[] = (
-        item.parent_id
+    const siblings: ControlledListItem[] = item.parent_id
         ? findItemInTree(tree.value, item.parent_id).children
-        : list.items
-    );
+        : list.items;
 
     const indexInSiblings = siblings.indexOf(item);
     const itemsToLeft = siblings.slice(0, indexInSiblings);
@@ -105,18 +114,27 @@ const onReorder = async (item: ControlledListItem, up: boolean) => {
     let reorderedSiblings: ControlledListItem[];
     if (up) {
         const leftNeighbor = itemsToLeft.pop();
-        if (!leftNeighbor) {  // should be impossible, not localized
-            throw new Error('Cannot shift upward - already at top');
+        if (!leftNeighbor) {
+            // should be impossible, not localized
+            throw new Error("Cannot shift upward - already at top");
         }
-        reorderedSiblings = [...itemsToLeft, item, leftNeighbor, ...itemsToRight];
+        reorderedSiblings = [
+            ...itemsToLeft,
+            item,
+            leftNeighbor,
+            ...itemsToRight,
+        ];
     } else {
         const [rightNeighbor, ...rest] = itemsToRight;
         reorderedSiblings = [...itemsToLeft, rightNeighbor, item, ...rest];
     }
 
-    const recalculateSortOrderRecursive = (acc: number, items: ControlledListItem[]) => {
+    const recalculateSortOrderRecursive = (
+        acc: number,
+        items: ControlledListItem[],
+    ) => {
         // Patch in the reordered siblings.
-        if (items.some(x => x.id === item.id)) {
+        if (items.some((x) => x.id === item.id)) {
             items = reorderedSiblings;
         }
         for (const thisItem of items) {
@@ -131,7 +149,9 @@ const onReorder = async (item: ControlledListItem, up: boolean) => {
 
     const newList = await postListToServer(list, toast, $gettext);
     if (newList) {
-        const oldListIndex = tree.value.findIndex(listNode => listNode.data.id === list.id);
+        const oldListIndex = tree.value.findIndex(
+            (listNode) => listNode.data.id === list.id,
+        );
         tree.value = [
             ...tree.value.slice(0, oldListIndex),
             listAsNode(newList, selectedLanguage.value),
@@ -141,24 +161,19 @@ const onReorder = async (item: ControlledListItem, up: boolean) => {
 };
 
 const isFirstItem = (item: ControlledListItem) => {
-    const siblings: typeof TreeNode[] = (
-        item.parent_id
+    const siblings: (typeof TreeNode)[] = item.parent_id
         ? findItemInTree(tree.value, item.parent_id).data.children
-        : findItemInTree(tree.value, item.controlled_list_id).data.items
-    );
+        : findItemInTree(tree.value, item.controlled_list_id).data.items;
     if (!siblings) {
         throw new Error("Unexpected lack of siblings");
     }
     return siblings[0].id === item.id;
 };
 
-
 const isLastItem = (item: ControlledListItem) => {
-    const siblings: typeof TreeNode[] = (
-        item.parent_id
+    const siblings: (typeof TreeNode)[] = item.parent_id
         ? findItemInTree(tree.value, item.parent_id).data.children
-        : findItemInTree(tree.value, item.controlled_list_id).data.items
-    );
+        : findItemInTree(tree.value, item.controlled_list_id).data.items;
     if (!siblings) {
         throw new Error("Unexpected lack of siblings");
     }
@@ -189,7 +204,7 @@ const isLastItem = (item: ControlledListItem) => {
             },
             wrapper: { style: { overflowY: 'auto', maxHeight: '100%' } },
             container: { style: { fontSize: '14px' } },
-            content: ({ context }) : { context: TreeContext } => ({
+            content: ({ context }): { context: TreeContext } => ({
                 style: { height: '4rem' },
             }),
             label: { style: { textWrap: 'nowrap', marginLeft: '0.5rem' } },
@@ -201,7 +216,10 @@ const isLastItem = (item: ControlledListItem) => {
         </template>
         <template #default="slotProps">
             <span class="label-and-actions">
-                {{ slotProps.node.data.name ?? bestLabel(slotProps.node.data, selectedLanguage.code).value }}
+                {{
+                    slotProps.node.data.name ??
+                    bestLabel(slotProps.node.data, selectedLanguage.code).value
+                }}
                 <span
                     v-if="!slotProps.node.data.name"
                     class="move-buttons"

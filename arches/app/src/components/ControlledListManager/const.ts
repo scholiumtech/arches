@@ -1,4 +1,7 @@
-import type { ControlledList, ControlledListItem } from "@/types/ControlledListManager";
+import type {
+    ControlledList,
+    ControlledListItem,
+} from "@/types/ControlledListManager";
 import type { Language } from "@/types/arches";
 
 // Injection keys
