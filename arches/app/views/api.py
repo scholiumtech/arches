@@ -1003,6 +1003,11 @@ class IIIFManifest(APIBase):
         return response
 
 
+class IIIFManifest(APIBase):
+    def get(self, request):
+        response = JSONResponse({"results": "testme!"})
+        return response
+
 class IIIFAnnotations(APIBase):
     def get(self, request):
         canvas = request.GET.get("canvas", None)
