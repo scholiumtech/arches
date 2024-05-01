@@ -1,11 +1,14 @@
 import arches from "arches";
 import Cookies from "js-cookie";
 
-import Toast from "primevue/toast";
+import type { ToastServiceMethods } from "primevue/toastservice";
 import type {
     ControlledList,
     ControlledListItem,
+    ControlledListItemImage,
+    ControlledListItemImageMetadata,
     Label,
+    NewControlledListItemImageMetadata,
     NewLabel,
 } from "@/types/ControlledListManager";
 
@@ -14,8 +17,8 @@ type GetText = (s: string) => string;
 
 export const postItemToServer = async (
     item: ControlledListItem,
-    toast: typeof Toast,
-    $gettext: GetText,
+    toast: ToastServiceMethods,
+    $gettext: GetText
 ) => {
     let errorText;
     try {
@@ -27,7 +30,7 @@ export const postItemToServer = async (
                     "X-CSRFToken": Cookies.get("csrftoken"),
                 },
                 body: JSON.stringify(item),
-            },
+            }
         );
         if (!response.ok) {
             errorText = response.statusText;
@@ -47,26 +50,17 @@ export const postItemToServer = async (
 
 export const postListToServer = async (
     list: ControlledList,
-    toast: typeof Toast,
-    $gettext: GetText,
+    toast: ToastServiceMethods,
+    $gettext: GetText
 ) => {
     let errorText;
-
-    // need to delete children, as they might prevent
-    // stringification if circular references exist.
-    const flatList = {
-        ...list,
-        items: list.items.map((item) => {
-            return { ...item, children: [] };
-        }),
-    };
     try {
         const response = await fetch(arches.urls.controlled_list(list.id), {
             method: "POST",
             headers: {
                 "X-CSRFToken": Cookies.get("csrftoken"),
             },
-            body: JSON.stringify(flatList),
+            body: JSON.stringify(list),
         });
         if (!response.ok) {
             errorText = response.statusText;
@@ -86,8 +80,8 @@ export const postListToServer = async (
 
 export const upsertLabel = async (
     label: NewLabel,
-    toast: typeof Toast,
-    $gettext: GetText,
+    toast: ToastServiceMethods,
+    $gettext: GetText
 ) => {
     let errorText;
     const url = label.id
@@ -119,8 +113,8 @@ export const upsertLabel = async (
 
 export const deleteLabel = async (
     label: Label,
-    toast: typeof Toast,
-    $gettext: GetText,
+    toast: ToastServiceMethods,
+    $gettext: GetText
 ) => {
     let errorText;
     try {
@@ -131,7 +125,7 @@ export const deleteLabel = async (
                 headers: {
                     "X-CSRFToken": Cookies.get("csrftoken"),
                 },
-            },
+            }
         );
         if (!response.ok) {
             errorText = response.statusText;
@@ -145,6 +139,103 @@ export const deleteLabel = async (
         toast.add({
             severity: ERROR,
             summary: errorText || $gettext("Label deletion failed"),
+        });
+    }
+};
+
+export const upsertMetadata = async (
+    metadata: NewControlledListItemImageMetadata,
+    toast: ToastServiceMethods,
+    $gettext: GetText,
+) => {
+    let errorText;
+    const url = metadata.id
+        ? arches.urls.controlled_list_item_image_metadata(metadata.id)
+        : arches.urls.controlled_list_item_image_metadata_add;
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": Cookies.get("csrftoken"),
+            },
+            body: JSON.stringify(metadata),
+        });
+        if (!response.ok) {
+            errorText = response.statusText;
+            const body = await response.json();
+            errorText = body.message;
+            throw new Error();
+        } else {
+            return await response.json();
+        }
+    } catch {
+        toast.add({
+            severity: ERROR,
+            summary: errorText || $gettext("Metadata save failed"),
+        });
+    }
+};
+
+export const deleteMetadata = async (
+    metadata: ControlledListItemImageMetadata,
+    toast: ToastServiceMethods,
+    $gettext: GetText,
+) => {
+    let errorText;
+    try {
+        const response = await fetch(
+            arches.urls.controlled_list_item_image_metadata(metadata.id),
+            {
+                method: "DELETE",
+                headers: {
+                    "X-CSRFToken": Cookies.get("csrftoken"),
+                },
+            }
+        );
+        if (!response.ok) {
+            errorText = response.statusText;
+            const body = await response.json();
+            errorText = body.message;
+            throw new Error();
+        } else {
+            return true;
+        }
+    } catch {
+        toast.add({
+            severity: ERROR,
+            summary: errorText || $gettext("Metadata deletion failed"),
+        });
+    }
+};
+
+export const deleteImage = async(
+    image: ControlledListItemImage,
+    toast: ToastServiceMethods,
+    $gettext: GetText,
+) => {
+    let errorText;
+    try {
+        const response = await fetch(
+            arches.urls.controlled_list_item_image(image.id),
+            {
+                method: "DELETE",
+                headers: {
+                    "X-CSRFToken": Cookies.get("csrftoken"),
+                },
+            }
+        );
+        if (!response.ok) {
+            errorText = response.statusText;
+            const body = await response.json();
+            errorText = body.message;
+            throw new Error();
+        } else {
+            return true;
+        }
+    } catch {
+        toast.add({
+            severity: ERROR,
+            summary: errorText || $gettext("Image deletion failed"),
         });
     }
 };

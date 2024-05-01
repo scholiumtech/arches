@@ -1,51 +1,51 @@
 <script setup lang="ts">
 import arches from "arches";
 import Cookies from "js-cookie";
-import { computed, inject } from "vue";
+import { inject } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import {
-    displayedRowKey,
-    selectedLanguageKey,
-} from "@/components/ControlledListManager/const.ts";
-import {
-    findItemInTree,
-    itemAsNode,
-    listAsNode,
-} from "@/components/ControlledListManager/utils.ts";
+import { displayedRowKey, selectedLanguageKey } from "@/components/ControlledListManager/const.ts";
+import { listAsNode } from "@/components/ControlledListManager/utils.ts";
 
 import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
 import Dropdown from "primevue/dropdown";
+import SplitButton from "primevue/splitbutton";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 
-import type {
-    TreeExpandedKeys,
-    TreeSelectionKeys,
-    TreeNode,
-} from "primevue/tree/Tree";
+import type { TreeExpandedKeys, TreeSelectionKeys } from "primevue/tree/Tree";
+import type { TreeNode } from "primevue/tree/Tree/TreeNode";
 import type { Ref } from "@/types/Ref";
-import type { ControlledList, NewItem } from "@/types/ControlledListManager";
+import type { ControlledList } from "@/types/ControlledListManager";
 
-const ERROR = "error"; // not user-facing
+// not user-facing
+const DANGER = "danger";
+const ERROR = "error";
 
 const { setDisplayedRow } = inject(displayedRowKey);
 const selectedLanguage = inject(selectedLanguageKey);
 
 const controlledListItemsTree = defineModel();
-const expandedKeys: Ref<typeof TreeExpandedKeys> = defineModel("expandedKeys");
-const selectedKeys: Ref<typeof TreeSelectionKeys> = defineModel("selectedKeys");
+const expandedKeys: Ref<TreeExpandedKeys> = defineModel("expandedKeys");
+const selectedKeys: Ref<TreeSelectionKeys> = defineModel("selectedKeys");
+const movingItem: Ref<typeof TreeNode> = defineModel("movingItem");
+const isMultiSelecting = defineModel("isMultiSelecting");
 
 const { $gettext, $ngettext } = useGettext();
-const ADD_NEW_LIST = $gettext("Add New List");
-const ADD_CHILD_ITEM = $gettext("Add Child Item");
-const lightGray = "#f4f4f4"; // todo: import from theme somewhere
 const buttonGreen = "#10b981";
-const buttonPink = "#ed7979";
 
 const confirm = useConfirm();
 const toast = useToast();
+
+const deleteDropdownOptions = [
+    {
+        label: $gettext("Delete Multiple"),
+        command: () => {
+            isMultiSelecting.value = true;
+        },
+    },
+];
 
 const expandAll = () => {
     for (const node of controlledListItemsTree.value) {
@@ -78,9 +78,9 @@ const fetchLists = async () => {
             throw new Error();
         } else {
             await response.json().then((data) => {
-                controlledListItemsTree.value = (
-                    data.controlled_lists as ControlledList[]
-                ).map((l) => listAsNode(l, selectedLanguage.value));
+                controlledListItemsTree.value = (data.controlled_lists as ControlledList[]).map(
+                    l => listAsNode(l, selectedLanguage.value)
+                );
             });
         }
     } catch {
@@ -113,47 +113,6 @@ const createList = async () => {
     }
 };
 
-const addChild = async (parent_id: string) => {
-    const newItem: NewItem = { parent_id };
-    try {
-        const response = await fetch(arches.urls.controlled_list_item_add, {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": Cookies.get("csrftoken"),
-            },
-            body: JSON.stringify(newItem),
-        });
-        if (response.ok) {
-            const newItem = await response.json();
-            const parent = findItemInTree(
-                controlledListItemsTree.value,
-                parent_id,
-            );
-            parent.children.unshift(
-                itemAsNode(newItem, selectedLanguage.value),
-            );
-            if (parent.data.name) {
-                // Parent node is a list
-                parent.data.items.unshift(newItem);
-            } else {
-                // Parent node is an item
-                parent.data.children.unshift(newItem);
-            }
-            expandedKeys.value = {
-                ...expandedKeys.value,
-                [parent.key]: true,
-            };
-        } else {
-            throw new Error();
-        }
-    } catch {
-        toast.add({
-            severity: ERROR,
-            summary: $gettext("Item creation failed"),
-        });
-    }
-};
-
 const deleteLists = async (listIds: string[]) => {
     if (!listIds.length) {
         return;
@@ -164,7 +123,7 @@ const deleteLists = async (listIds: string[]) => {
             headers: {
                 "X-CSRFToken": Cookies.get("csrftoken"),
             },
-        }),
+        })
     );
 
     try {
@@ -200,7 +159,7 @@ const deleteItems = async (itemIds: string[]) => {
             headers: {
                 "X-CSRFToken": Cookies.get("csrftoken"),
             },
-        }),
+        })
     );
 
     try {
@@ -226,46 +185,21 @@ const deleteItems = async (itemIds: string[]) => {
     }
 };
 
-const addLabel = computed(() => {
-    const selectedKeysList = Object.keys(selectedKeys.value);
-    if (selectedKeysList.length === 0) {
-        return ADD_NEW_LIST;
-    }
-    return ADD_CHILD_ITEM;
-});
-
-const onCreate = async () => {
-    if (!selectedKeys.value) {
-        return;
-    }
-    const ids = Object.keys(selectedKeys.value);
-    if (ids.length === 0) {
-        await createList();
-    } else {
-        // Button should have been disabled if there were >1 selected
-        await addChild(ids[0]);
-    }
-};
-
 const deleteSelected = async () => {
     if (!selectedKeys.value) {
         return;
     }
     const deletes = Object.keys(selectedKeys.value);
-    if (deletes.length !== 1) {
-        throw new Error("Mass deletion not yet implemented.");
-    }
-    const toDelete = deletes[0];
+    const allListIds = controlledListItemsTree.value.map((node: typeof TreeNode) => node.data.id);
+
+    const listIdsToDelete = deletes.filter(id => allListIds.includes(id));
+    const itemIdsToDelete = deletes.filter(id => !listIdsToDelete.includes(id));
+
     selectedKeys.value = {};
 
-    const allListIds = controlledListItemsTree.value.map(
-        (node: typeof TreeNode) => node.data.id,
-    );
-    if (allListIds.includes(toDelete)) {
-        await deleteLists(deletes);
-    } else {
-        await deleteItems(deletes);
-    }
+    // Do items first so that cascade deletion doesn't cause item deletion to fail.
+    await deleteItems(itemIdsToDelete);
+    await deleteLists(listIdsToDelete);
 };
 
 const confirmDelete = () => {
@@ -282,7 +216,6 @@ const confirmDelete = () => {
         rejectLabel: $gettext("Cancel"),
         rejectClass: "p-button-secondary p-button-outlined",
         acceptLabel: $gettext("Delete"),
-        draggable: false,
         accept: async () => {
             await deleteSelected().then(fetchLists);
         },
@@ -297,24 +230,55 @@ await fetchLists();
     <div class="controls">
         <Button
             class="list-button"
-            :label="addLabel"
+            :label="$gettext('Add New List')"
             raised
-            :disabled="Object.keys(selectedKeys).length > 1"
             style="font-size: inherit"
             :pt="{ root: { style: { background: buttonGreen } } }"
-            @click="onCreate"
+            @click="createList"
         />
         <ConfirmDialog :draggable="false" />
-        <Button
+        <SplitButton
             class="list-button"
             :label="$gettext('Delete')"
             raised
+            style="font-size: inherit"
             :disabled="!Object.keys(selectedKeys).length"
-            :pt="{ root: { style: { background: buttonPink } } }"
+            :severity="DANGER"
+            :model="deleteDropdownOptions"
+            :menu-button-props="{ disabled: !Object.keys(selectedKeys).length || movingItem.key || isMultiSelecting }"
             @click="confirmDelete"
         />
     </div>
-    <div class="controls">
+
+    <div
+        v-if="movingItem.key"
+        class="action-banner"
+    >
+        <!-- disable HTML escaping: RDM Admins are trusted users -->
+        {{ $gettext("Selecting new parent for: %{item}", { item: movingItem.label }, true) }}
+        <Button
+            type="button"
+            class="banner-button"
+            :label="$gettext('Abandon')"
+            @click="movingItem = {}"
+        />
+    </div>
+    <div
+        v-else-if="isMultiSelecting"
+        class="action-banner"
+    >
+        {{ $gettext("Select additional items to delete") }}
+        <Button
+            type="button"
+            class="banner-button"
+            :label="$gettext('Abandon')"
+            @click="isMultiSelecting = false"
+        />
+    </div>
+    <div
+        v-else
+        class="controls"
+    >
         <Button
             class="secondary-button"
             type="button"
@@ -337,15 +301,8 @@ await fetchLists();
             checkmark
             :highlight-on-select="false"
             :pt="{
-                root: { class: 'secondary-button' },
-                input: {
-                    style: {
-                        fontFamily: 'inherit',
-                        fontSize: 'small',
-                        textAlign: 'center',
-                        alignContent: 'center',
-                    },
-                },
+                root: { class: 'p-button secondary-button' },
+                input: { style: { fontFamily: 'inherit', fontSize: 'small', textAlign: 'center', alignContent: 'center' } },
                 itemLabel: { style: { fontSize: 'small' } },
             }"
         />
@@ -353,6 +310,22 @@ await fetchLists();
 </template>
 
 <style scoped>
+.action-banner {
+    background: yellow;
+    font-weight: 800;
+    height: 5rem;
+    font-size: small;
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    align-items: center;
+}
+.banner-button {
+    height: 3rem;
+    background: darkslategray;
+    color: white;
+    text-wrap: nowrap;
+}
 .controls {
     display: flex;
     background: #f3fbfd;
@@ -360,7 +333,7 @@ await fetchLists();
     font-size: small;
     padding: 0.5rem;
 }
-.list-button {
+.list-button, .p-splitbutton {
     height: 4rem;
     margin: 0.5rem;
     flex: 0.5;
@@ -372,7 +345,7 @@ await fetchLists();
 .secondary-button {
     flex: 0.33;
     border: 0;
-    background: v-bind(lightGray);
+    background: #f4f4f4;
     height: 3rem;
     margin: 0.5rem;
     justify-content: center;
@@ -382,6 +355,12 @@ await fetchLists();
 </style>
 
 <style>
+.p-tieredmenu.p-tieredmenu-overlay {
+    font-size: inherit;
+}
+.p-tieredmenu-root-list {
+    margin: 0;  /* override arches css */
+}
 .p-confirm-dialog {
     font-size: small;
 }

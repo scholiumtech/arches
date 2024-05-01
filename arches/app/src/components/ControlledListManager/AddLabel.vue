@@ -1,32 +1,38 @@
 <script setup lang="ts">
 import arches from "arches";
-import { computed, inject, ref } from "vue";
+import { computed, inject } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import EditLabel from "@/components/ControlledListManager/EditLabel.vue";
+import Button from "primevue/button";
 
-import {
-    itemKey,
-    ALT_LABEL,
-    PREF_LABEL,
-} from "@/components/ControlledListManager/const.ts";
+import { itemKey, ALT_LABEL, PREF_LABEL } from "@/components/ControlledListManager/const.ts";
 
-import type { NewLabel, ValueType } from "@/types/ControlledListManager";
+import type {
+    Label,
+    NewLabel,
+    ValueType,
+} from "@/types/ControlledListManager";
 
 const props: { type: ValueType } = defineProps(["type"]);
 const { item } = inject(itemKey);
-
-const modalVisible = ref(false);
 
 const { $gettext } = useGettext();
 const slateBlue = "#2d3c4b"; // todo: import from theme somewhere
 
 const newLabel: NewLabel = computed(() => {
+    const otherNewLabels = item.value.labels.filter(
+        (l: NewLabel | Label) => typeof l.id === "number"
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any 
+    ) as any as NewLabel[];
+    const maxOtherNewLabelId = Math.max(
+        ...otherNewLabels.map(l => l.id),
+        1000,
+    );
     return {
-        id: null,
-        valuetype: props.type,
-        language: arches.activeLanguage,
-        value: "",
+        id: maxOtherNewLabelId + 1,
+        valuetype_id: props.type,
+        language_id: arches.activeLanguage,
+        value: '',
         item_id: item.value.id,
     };
 });
@@ -44,9 +50,10 @@ const buttonLabel = computed(() => {
 </script>
 
 <template>
-    <button
+    <Button
         class="add-label"
-        @click="modalVisible = true"
+        raised
+        @click="item.labels.push(newLabel)"
     >
         <i
             class="fa fa-plus-circle"
@@ -55,21 +62,16 @@ const buttonLabel = computed(() => {
         <span class="add-label-text">
             {{ buttonLabel }}
         </span>
-    </button>
-    <EditLabel
-        v-model="modalVisible"
-        :header="buttonLabel"
-        :label="newLabel"
-        :is-insert="true"
-    />
+    </Button>
 </template>
 
 <style scoped>
 .add-label {
     display: flex;
-    width: 100%;
-    height: 4rem;
+    height: 3rem;
     color: v-bind(slateBlue);
+    background-color: #f3fbfd;
+    margin-top: 1rem;
 }
 .add-label > i,
 .add-label > span {

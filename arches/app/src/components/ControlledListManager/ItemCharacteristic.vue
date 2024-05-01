@@ -8,17 +8,10 @@ import { useToast } from "primevue/usetoast";
 import { postItemToServer } from "@/components/ControlledListManager/api.ts";
 import { itemKey } from "@/components/ControlledListManager/const.ts";
 
-const props: {
-    editable: boolean;
-    field: "uri";
-    label: string;
-} = defineProps(["editable", "field", "label"]);
+const props: { field: "uri", label: string } = defineProps(["field", "label"]);
 const { item } = inject(itemKey);
 
 const editing = ref(false);
-const disabled = computed(() => {
-    return !props.editable || !editing.value;
-});
 
 const formValue = ref("");
 
@@ -52,14 +45,15 @@ const onCancel = () => {
 
 <template>
     <div class="characteristic">
-        <h4>{{ props.label }}</h4>
         <InputText
             v-model="inputValue"
             type="text"
-            :disabled="disabled"
+            :disabled="!editing"
+            :aria-label="label"
+            :placeholder="$gettext('Enter a URI')"
         />
         <span
-            v-if="props.editable && !editing"
+            v-if="!editing"
             class="edit-controls"
         >
             <i
@@ -72,7 +66,7 @@ const onCancel = () => {
             />
         </span>
         <span
-            v-if="props.editable && editing"
+            v-if="editing"
             class="edit-controls"
         >
             <i
@@ -96,24 +90,26 @@ const onCancel = () => {
 </template>
 
 <style scoped>
-h4,
 input {
     font-size: 1.25rem;
 }
 
 .characteristic {
     margin: 1rem 1rem 2rem 1rem;
+    display: flex;
+    align-items: center;
 }
 
 .characteristic input {
     text-align: center;
-    border-width: 2px;
     height: 3rem;
     width: 100%;
 }
 
 .characteristic input[disabled] {
-    background: var(--gray-400);
+    text-align: left;
+    opacity: 1;
+    border: 0;
 }
 
 .edit-controls {
@@ -124,7 +120,7 @@ input {
 }
 
 .edit-controls i {
-    font-size: medium;
+    font-size: small;
     padding: 4px;
 }
 </style>

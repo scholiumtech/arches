@@ -42,6 +42,12 @@ const { $gettext } = useGettext();
             >
                 <ReferenceNodeLink :node />
             </div>
+            <div
+                v-if="displayedRow.nodes.length === 0"
+                :style="{ fontSize: 'small' }"
+            >
+                {{ $gettext('None') }}
+            </div>
         </div>
     </div>
 </template>
@@ -54,7 +60,7 @@ const { $gettext } = useGettext();
     margin: 1rem 1rem 0rem 1rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid;
-    width: 80%;
+    width: 100%;
 }
 
 h3 {
