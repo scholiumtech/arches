@@ -46,7 +46,7 @@ const { $gettext } = useGettext();
                 v-if="displayedRow.nodes.length === 0"
                 :style="{ fontSize: 'small' }"
             >
-                {{ $gettext('None') }}
+                {{ $gettext("None") }}
             </div>
         </div>
     </div>

@@ -4,7 +4,10 @@ import Cookies from "js-cookie";
 import { inject } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import { displayedRowKey, selectedLanguageKey } from "@/components/ControlledListManager/const.ts";
+import {
+    displayedRowKey,
+    selectedLanguageKey,
+} from "@/components/ControlledListManager/const.ts";
 import { listAsNode } from "@/components/ControlledListManager/utils.ts";
 
 import Button from "primevue/button";
@@ -78,9 +81,9 @@ const fetchLists = async () => {
             throw new Error();
         } else {
             await response.json().then((data) => {
-                controlledListItemsTree.value = (data.controlled_lists as ControlledList[]).map(
-                    l => listAsNode(l, selectedLanguage.value)
-                );
+                controlledListItemsTree.value = (
+                    data.controlled_lists as ControlledList[]
+                ).map((l) => listAsNode(l, selectedLanguage.value));
             });
         }
     } catch {
@@ -123,7 +126,7 @@ const deleteLists = async (listIds: string[]) => {
             headers: {
                 "X-CSRFToken": Cookies.get("csrftoken"),
             },
-        })
+        }),
     );
 
     try {
@@ -159,7 +162,7 @@ const deleteItems = async (itemIds: string[]) => {
             headers: {
                 "X-CSRFToken": Cookies.get("csrftoken"),
             },
-        })
+        }),
     );
 
     try {
@@ -190,10 +193,14 @@ const deleteSelected = async () => {
         return;
     }
     const deletes = Object.keys(selectedKeys.value);
-    const allListIds = controlledListItemsTree.value.map((node: typeof TreeNode) => node.data.id);
+    const allListIds = controlledListItemsTree.value.map(
+        (node: typeof TreeNode) => node.data.id,
+    );
 
-    const listIdsToDelete = deletes.filter(id => allListIds.includes(id));
-    const itemIdsToDelete = deletes.filter(id => !listIdsToDelete.includes(id));
+    const listIdsToDelete = deletes.filter((id) => allListIds.includes(id));
+    const itemIdsToDelete = deletes.filter(
+        (id) => !listIdsToDelete.includes(id),
+    );
 
     selectedKeys.value = {};
 
@@ -245,7 +252,12 @@ await fetchLists();
             :disabled="!Object.keys(selectedKeys).length"
             :severity="DANGER"
             :model="deleteDropdownOptions"
-            :menu-button-props="{ disabled: !Object.keys(selectedKeys).length || movingItem.key || isMultiSelecting }"
+            :menu-button-props="{
+                disabled:
+                    !Object.keys(selectedKeys).length ||
+                    movingItem.key ||
+                    isMultiSelecting,
+            }"
             @click="confirmDelete"
         />
     </div>
@@ -255,7 +267,13 @@ await fetchLists();
         class="action-banner"
     >
         <!-- disable HTML escaping: RDM Admins are trusted users -->
-        {{ $gettext("Selecting new parent for: %{item}", { item: movingItem.label }, true) }}
+        {{
+            $gettext(
+                "Selecting new parent for: %{item}",
+                { item: movingItem.label },
+                true,
+            )
+        }}
         <Button
             type="button"
             class="banner-button"
@@ -302,7 +320,14 @@ await fetchLists();
             :highlight-on-select="false"
             :pt="{
                 root: { class: 'p-button secondary-button' },
-                input: { style: { fontFamily: 'inherit', fontSize: 'small', textAlign: 'center', alignContent: 'center' } },
+                input: {
+                    style: {
+                        fontFamily: 'inherit',
+                        fontSize: 'small',
+                        textAlign: 'center',
+                        alignContent: 'center',
+                    },
+                },
                 itemLabel: { style: { fontSize: 'small' } },
             }"
         />
@@ -333,7 +358,8 @@ await fetchLists();
     font-size: small;
     padding: 0.5rem;
 }
-.list-button, .p-splitbutton {
+.list-button,
+.p-splitbutton {
     height: 4rem;
     margin: 0.5rem;
     flex: 0.5;
@@ -359,7 +385,7 @@ await fetchLists();
     font-size: inherit;
 }
 .p-tieredmenu-root-list {
-    margin: 0;  /* override arches css */
+    margin: 0; /* override arches css */
 }
 .p-confirm-dialog {
     font-size: small;

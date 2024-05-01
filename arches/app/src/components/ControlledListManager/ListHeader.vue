@@ -2,7 +2,10 @@
 import { computed, inject } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import { displayedRowKey, selectedLanguageKey } from "@/components/ControlledListManager/const.ts";
+import {
+    displayedRowKey,
+    selectedLanguageKey,
+} from "@/components/ControlledListManager/const.ts";
 import { bestLabel } from "@/components/ControlledListManager/utils.ts";
 const { $gettext } = useGettext();
 const slateBlue = "#2d3c4b"; // todo: import from theme somewhere
@@ -23,7 +26,12 @@ const heading = computed(() => {
     }
     return $gettext(
         "Item Editor > %{bestLabel}",
-        { bestLabel: bestLabel(displayedRow.value, selectedLanguage.value.code).value },
+        {
+            bestLabel: bestLabel(
+                displayedRow.value,
+                selectedLanguage.value.code,
+            ).value,
+        },
         true, // disable HTML escaping: RDM Admins are trusted users
     );
 });

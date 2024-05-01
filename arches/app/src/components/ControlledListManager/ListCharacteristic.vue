@@ -56,7 +56,7 @@ const onCancel = () => {
         <!-- TODO https://github.com/archesproject/arches/issues/10847 -->
         <span
             v-if="field === 'dynamic'"
-            style="font-size: small;"
+            style="font-size: small"
         >
             False
         </span>

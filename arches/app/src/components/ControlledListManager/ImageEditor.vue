@@ -13,8 +13,15 @@ import { useToast } from "primevue/usetoast";
 import AddMetadata from "@/components/ControlledListManager/AddMetadata.vue";
 
 import { itemKey } from "@/components/ControlledListManager/const.ts";
-import { deleteImage, upsertMetadata, deleteMetadata } from "@/components/ControlledListManager/api.ts";
-import { bestLabel, languageName } from "@/components/ControlledListManager/utils.ts";
+import {
+    deleteImage,
+    upsertMetadata,
+    deleteMetadata,
+} from "@/components/ControlledListManager/api.ts";
+import {
+    bestLabel,
+    languageName,
+} from "@/components/ControlledListManager/utils.ts";
 
 import type { DataTableRowEditInitEvent } from "primevue/datatable";
 import type {
@@ -23,13 +30,35 @@ import type {
     NewControlledListItemImageMetadata,
 } from "@/types/ControlledListManager";
 
-const { image, removeImage, appendImageMetadata, updateImageMetadata, removeImageMetadata } : {
-    image: ControlledListItemImage,
-    removeImage: (removedImage: ControlledListItemImage) => undefined,
-    appendImageMetadata: (appendedMetadata: ControlledListItemImageMetadata | NewControlledListItemImageMetadata) => undefined,
-    updateImageMetadata: (updatedMetadata: ControlledListItemImageMetadata) => undefined,
-    removeImageMetadata: (removedMetadata: ControlledListItemImageMetadata | NewControlledListItemImageMetadata) => undefined,
-} = defineProps(["image", "removeImage", "appendImageMetadata", "updateImageMetadata", "removeImageMetadata"]);
+const {
+    image,
+    removeImage,
+    appendImageMetadata,
+    updateImageMetadata,
+    removeImageMetadata,
+}: {
+    image: ControlledListItemImage;
+    removeImage: (removedImage: ControlledListItemImage) => undefined;
+    appendImageMetadata: (
+        appendedMetadata:
+            | ControlledListItemImageMetadata
+            | NewControlledListItemImageMetadata,
+    ) => undefined;
+    updateImageMetadata: (
+        updatedMetadata: ControlledListItemImageMetadata,
+    ) => undefined;
+    removeImageMetadata: (
+        removedMetadata:
+            | ControlledListItemImageMetadata
+            | NewControlledListItemImageMetadata,
+    ) => undefined;
+} = defineProps([
+    "image",
+    "removeImage",
+    "appendImageMetadata",
+    "updateImageMetadata",
+    "removeImageMetadata",
+]);
 const { item } = inject(itemKey);
 
 const editingRows = ref([]);
@@ -40,40 +69,40 @@ const { $gettext } = useGettext();
 
 const METADATA_CHOICES = [
     {
-        type: 'title',
-        label: $gettext('Title'),
+        type: "title",
+        label: $gettext("Title"),
     },
     {
-        type: 'alt',
-        label: $gettext('Alternative text'),
+        type: "alt",
+        label: $gettext("Alternative text"),
     },
     {
-        type: 'desc',
-        label: $gettext('Description'),
+        type: "desc",
+        label: $gettext("Description"),
     },
     {
-        type: 'attr',
-        label: $gettext('Attribution'),
+        type: "attr",
+        label: $gettext("Attribution"),
     },
 ];
 
 const bestAlternativeText = computed(() => {
-    return image.metadata.filter(m => m.metadata_type === "alt")
-        .find(m => m.language_id === arches.activeLanguage)?.value
-        || bestLabel(item.value, arches.activeLanguage).value;
+    return (
+        image.metadata
+            .filter((m) => m.metadata_type === "alt")
+            .find((m) => m.language_id === arches.activeLanguage)?.value ||
+        bestLabel(item.value, arches.activeLanguage).value
+    );
 });
 
-const onSaveMetadata = async (event: DataTableRowEditInitEvent)  => {
+const onSaveMetadata = async (event: DataTableRowEditInitEvent) => {
     // normalize new metadata numbers (starting at 1000) to null
     const normalizedNewData: ControlledListItemImageMetadata = {
         ...event.newData,
-        id: typeof event.newData.id === 'string' ? event.newData.id : null,
+        id: typeof event.newData.id === "string" ? event.newData.id : null,
     };
-    const upsertedMetadata: ControlledListItemImageMetadata = await upsertMetadata(
-        normalizedNewData,
-        toast,
-        $gettext,
-    );
+    const upsertedMetadata: ControlledListItemImageMetadata =
+        await upsertMetadata(normalizedNewData, toast, $gettext);
     if (normalizedNewData.id) {
         updateImageMetadata(upsertedMetadata);
     } else {
@@ -82,8 +111,12 @@ const onSaveMetadata = async (event: DataTableRowEditInitEvent)  => {
     }
 };
 
-const onDeleteMetadata = async (metadata: NewControlledListItemImageMetadata | ControlledListItemImageMetadata) => {
-    if (typeof metadata.id === 'number') {
+const onDeleteMetadata = async (
+    metadata:
+        | NewControlledListItemImageMetadata
+        | ControlledListItemImageMetadata,
+) => {
+    if (typeof metadata.id === "number") {
         removeImageMetadata(metadata);
         return;
     }
@@ -107,7 +140,7 @@ const onDeleteImage = async () => {
             :src="image.url"
             :alt="bestAlternativeText"
             width="200"
-        >
+        />
         <div>
             <DataTable
                 v-if="image.metadata.length"
@@ -130,13 +163,24 @@ const onDeleteImage = async () => {
                             option-label="label"
                             option-value="type"
                             :pt="{
-                                input: { style: { fontFamily: 'inherit', fontSize: 'small' } },
+                                input: {
+                                    style: {
+                                        fontFamily: 'inherit',
+                                        fontSize: 'small',
+                                    },
+                                },
                                 panel: { style: { fontSize: 'small' } },
                             }"
                         />
                     </template>
                     <template #body="slotProps">
-                        {{ METADATA_CHOICES.find(choice => choice.type === slotProps.data.metadata_type).label }}
+                        {{
+                            METADATA_CHOICES.find(
+                                (choice) =>
+                                    choice.type ===
+                                    slotProps.data.metadata_type,
+                            ).label
+                        }}
                     </template>
                 </Column>
                 <Column field="value">
@@ -150,7 +194,12 @@ const onDeleteImage = async () => {
                 <Column
                     field="language_id"
                     :header="$gettext('Language')"
-                    style="width: 10%; min-width: 8rem; height: 4rem; padding-left: 1rem;"
+                    style="
+                        width: 10%;
+                        min-width: 8rem;
+                        height: 4rem;
+                        padding-left: 1rem;
+                    "
                 >
                     <template #editor="{ data, field }">
                         <Dropdown
@@ -159,7 +208,12 @@ const onDeleteImage = async () => {
                             option-label="name"
                             option-value="code"
                             :pt="{
-                                input: { style: { fontFamily: 'inherit', fontSize: 'small' } },
+                                input: {
+                                    style: {
+                                        fontFamily: 'inherit',
+                                        fontSize: 'small',
+                                    },
+                                },
                                 panel: { style: { fontSize: 'small' } },
                             }"
                         />
@@ -170,9 +224,9 @@ const onDeleteImage = async () => {
                 </Column>
                 <Column
                     :row-editor="true"
-                    style="width: 10%; min-width: 8rem;"
+                    style="width: 10%; min-width: 8rem"
                 />
-                <Column style="width: 5%;">
+                <Column style="width: 5%">
                     <template #body="slotProps">
                         <i
                             class="fa fa-trash"
@@ -185,7 +239,7 @@ const onDeleteImage = async () => {
                     </template>
                 </Column>
             </DataTable>
-            <div style="display: flex; gap: 1rem;">
+            <div style="display: flex; gap: 1rem">
                 <AddMetadata
                     :image
                     :choices="METADATA_CHOICES"

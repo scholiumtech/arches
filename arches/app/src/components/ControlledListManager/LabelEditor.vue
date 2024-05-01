@@ -9,10 +9,16 @@ import Dropdown from "primevue/dropdown";
 import InputText from "primevue/inputtext";
 import { useToast } from "primevue/usetoast";
 
-import { deleteLabel, upsertLabel } from "@/components/ControlledListManager/api.ts";
+import {
+    deleteLabel,
+    upsertLabel,
+} from "@/components/ControlledListManager/api.ts";
 import AddLabel from "@/components/ControlledListManager/AddLabel.vue";
 
-import { ALT_LABEL, PREF_LABEL } from "@/components/ControlledListManager/const.ts";
+import {
+    ALT_LABEL,
+    PREF_LABEL,
+} from "@/components/ControlledListManager/const.ts";
 import { languageName } from "@/components/ControlledListManager/utils.ts";
 
 import type { DataTableRowEditInitEvent } from "primevue/datatable";
@@ -24,12 +30,18 @@ import type {
 } from "@/types/ControlledListManager";
 
 const props: {
-    type: ValueType,
-    item: ControlledListItem,
-    appendItemLabel: (appendedLabel: Label | NewLabel) => undefined,
-    updateItemLabel: (updatedLabel: Label) => undefined,
-    removeItemLabel: (removedLabel: Label | NewLabel) => undefined,
-} = defineProps(["type", "item", "appendItemLabel", "updateItemLabel", "removeItemLabel"]);
+    type: ValueType;
+    item: ControlledListItem;
+    appendItemLabel: (appendedLabel: Label | NewLabel) => undefined;
+    updateItemLabel: (updatedLabel: Label) => undefined;
+    removeItemLabel: (removedLabel: Label | NewLabel) => undefined;
+} = defineProps([
+    "type",
+    "item",
+    "appendItemLabel",
+    "updateItemLabel",
+    "removeItemLabel",
+]);
 const editingRows = ref([]);
 
 const toast = useToast();
@@ -42,14 +54,14 @@ const headings: { heading: string; subheading: string } = computed(() => {
             return {
                 heading: $gettext("Preferred Label(s)"),
                 subheading: $gettext(
-                    "Provide at least one preferred label and language for your list item."
+                    "Provide at least one preferred label and language for your list item.",
                 ),
             };
         case ALT_LABEL:
             return {
                 heading: $gettext("Alternate Label(s)"),
                 subheading: $gettext(
-                    "Optionally, you can provide additional label/language labels for your list item. Useful if you want to make searching for labels with synonyms or common misspellings of your preferred label(s) easier."
+                    "Optionally, you can provide additional label/language labels for your list item. Useful if you want to make searching for labels with synonyms or common misspellings of your preferred label(s) easier.",
                 ),
             };
         default:
@@ -65,7 +77,7 @@ const labels = computed(() => {
         return [];
     }
     return props.item.labels.filter(
-        label => label.valuetype_id === props.type
+        (label) => label.valuetype_id === props.type,
     );
 });
 
@@ -73,7 +85,7 @@ const onSave = async (event: DataTableRowEditInitEvent) => {
     // normalize new label numbers (starting at 1000) to null
     const normalizedNewData: Label = {
         ...event.newData,
-        id: typeof event.newData.id === 'string' ? event.newData.id : null,
+        id: typeof event.newData.id === "string" ? event.newData.id : null,
     };
     const upsertedLabel: Label = await upsertLabel(
         normalizedNewData,
@@ -89,7 +101,7 @@ const onSave = async (event: DataTableRowEditInitEvent) => {
 };
 
 const onDelete = async (label: NewLabel | Label) => {
-    if (typeof label.id === 'number') {
+    if (typeof label.id === "number") {
         props.removeItemLabel(label);
         return;
     }
@@ -135,7 +147,12 @@ const onDelete = async (label: NewLabel | Label) => {
                         option-label="name"
                         option-value="code"
                         :pt="{
-                            input: { style: { fontFamily: 'inherit', fontSize: 'small' } },
+                            input: {
+                                style: {
+                                    fontFamily: 'inherit',
+                                    fontSize: 'small',
+                                },
+                            },
                             panel: { style: { fontSize: 'small' } },
                         }"
                     />
@@ -146,9 +163,9 @@ const onDelete = async (label: NewLabel | Label) => {
             </Column>
             <Column
                 :row-editor="true"
-                style="width: 10%; min-width: 8rem;"
+                style="width: 10%; min-width: 8rem"
             />
-            <Column style="width: 5%;">
+            <Column style="width: 5%">
                 <template #body="slotProps">
                     <i
                         class="fa fa-trash"

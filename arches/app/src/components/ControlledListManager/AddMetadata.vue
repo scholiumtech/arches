@@ -14,8 +14,12 @@ import type {
     NewControlledListItemImageMetadata,
 } from "@/types/ControlledListManager";
 
-const { choices: METADATA_CHOICES, image } : {
-    choices: MetadataChoice[], image: ControlledListItemImage
+const {
+    choices: METADATA_CHOICES,
+    image,
+}: {
+    choices: MetadataChoice[];
+    image: ControlledListItemImage;
 } = defineProps(["choices", "image"]);
 const { item } = inject(itemKey);
 
@@ -24,19 +28,31 @@ const slateBlue = "#2d3c4b"; // todo: import from theme somewhere
 
 const newMetadata: NewControlledListItemImageMetadata = computed(() => {
     const otherNewMetadatas = image.metadata.filter(
-        (m: NewControlledListItemImageMetadata | ControlledListItemImageMetadata) => typeof m.id === "number"
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any 
+        (
+            m:
+                | NewControlledListItemImageMetadata
+                | ControlledListItemImageMetadata,
+        ) => typeof m.id === "number",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ) as any as NewControlledListItemImageMetadata[];
     const maxOtherNewMetadataId = Math.max(
-        ...otherNewMetadatas.map(m => m.id),
+        ...otherNewMetadatas.map((m) => m.id),
         1000,
     );
 
-    const nextMetadataType = METADATA_CHOICES.find(
-        choice => !image.metadata.map(
-            (m: ControlledListItemImageMetadata | NewControlledListItemImageMetadata) => m.metadata_type
-        ).includes(choice.type)
-    ) ?? METADATA_CHOICES[0];
+    const nextMetadataType =
+        METADATA_CHOICES.find(
+            (choice) =>
+                !image.metadata
+                    .map(
+                        (
+                            m:
+                                | ControlledListItemImageMetadata
+                                | NewControlledListItemImageMetadata,
+                        ) => m.metadata_type,
+                    )
+                    .includes(choice.type),
+        ) ?? METADATA_CHOICES[0];
 
     return {
         id: maxOtherNewMetadataId + 1,
@@ -44,7 +60,7 @@ const newMetadata: NewControlledListItemImageMetadata = computed(() => {
         metadata_label: nextMetadataType.label,
         language_id: arches.activeLanguage,
         controlled_list_item_image_id: image.id,
-        value: '',
+        value: "",
     };
 });
 </script>
@@ -53,7 +69,11 @@ const newMetadata: NewControlledListItemImageMetadata = computed(() => {
     <Button
         class="add-metadata"
         raised
-        @click="item.images.find(i => i.id === image.id).metadata.push(newMetadata)"
+        @click="
+            item.images
+                .find((i) => i.id === image.id)
+                .metadata.push(newMetadata)
+        "
     >
         <i
             class="fa fa-plus-circle"

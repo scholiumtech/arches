@@ -18,7 +18,7 @@ type GetText = (s: string) => string;
 export const postItemToServer = async (
     item: ControlledListItem,
     toast: ToastServiceMethods,
-    $gettext: GetText
+    $gettext: GetText,
 ) => {
     let errorText;
     try {
@@ -30,7 +30,7 @@ export const postItemToServer = async (
                     "X-CSRFToken": Cookies.get("csrftoken"),
                 },
                 body: JSON.stringify(item),
-            }
+            },
         );
         if (!response.ok) {
             errorText = response.statusText;
@@ -51,7 +51,7 @@ export const postItemToServer = async (
 export const postListToServer = async (
     list: ControlledList,
     toast: ToastServiceMethods,
-    $gettext: GetText
+    $gettext: GetText,
 ) => {
     let errorText;
     try {
@@ -81,7 +81,7 @@ export const postListToServer = async (
 export const upsertLabel = async (
     label: NewLabel,
     toast: ToastServiceMethods,
-    $gettext: GetText
+    $gettext: GetText,
 ) => {
     let errorText;
     const url = label.id
@@ -114,7 +114,7 @@ export const upsertLabel = async (
 export const deleteLabel = async (
     label: Label,
     toast: ToastServiceMethods,
-    $gettext: GetText
+    $gettext: GetText,
 ) => {
     let errorText;
     try {
@@ -125,7 +125,7 @@ export const deleteLabel = async (
                 headers: {
                     "X-CSRFToken": Cookies.get("csrftoken"),
                 },
-            }
+            },
         );
         if (!response.ok) {
             errorText = response.statusText;
@@ -190,7 +190,7 @@ export const deleteMetadata = async (
                 headers: {
                     "X-CSRFToken": Cookies.get("csrftoken"),
                 },
-            }
+            },
         );
         if (!response.ok) {
             errorText = response.statusText;
@@ -208,7 +208,7 @@ export const deleteMetadata = async (
     }
 };
 
-export const deleteImage = async(
+export const deleteImage = async (
     image: ControlledListItemImage,
     toast: ToastServiceMethods,
     $gettext: GetText,
@@ -222,7 +222,7 @@ export const deleteImage = async(
                 headers: {
                     "X-CSRFToken": Cookies.get("csrftoken"),
                 },
-            }
+            },
         );
         if (!response.ok) {
             errorText = response.statusText;

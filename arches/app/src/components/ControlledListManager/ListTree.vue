@@ -10,7 +10,10 @@ import { useToast } from "primevue/usetoast";
 
 import LetterCircle from "@/components/ControlledListManager/LetterCircle.vue";
 import ListTreeControls from "@/components/ControlledListManager/ListTreeControls.vue";
-import { displayedRowKey, selectedLanguageKey } from "@/components/ControlledListManager/const.ts";
+import {
+    displayedRowKey,
+    selectedLanguageKey,
+} from "@/components/ControlledListManager/const.ts";
 import { postListToServer } from "@/components/ControlledListManager/api.ts";
 import {
     bestLabel,
@@ -21,10 +24,7 @@ import {
 } from "@/components/ControlledListManager/utils.ts";
 
 import type { Ref } from "@/types/Ref";
-import type {
-    TreeExpandedKeys,
-    TreeSelectionKeys,
-} from "primevue/tree/Tree";
+import type { TreeExpandedKeys, TreeSelectionKeys } from "primevue/tree/Tree";
 import type { TreeNode } from "primevue/tree/Tree/TreeNode";
 import type {
     ControlledList,
@@ -32,7 +32,7 @@ import type {
     NewItem,
 } from "@/types/ControlledListManager";
 
-const tree: Ref<typeof TreeNode[]> = ref([]);
+const tree: Ref<(typeof TreeNode)[]> = ref([]);
 const selectedKeys: Ref<TreeSelectionKeys> = ref({});
 const expandedKeys: Ref<TreeExpandedKeys> = ref({});
 const movingItem: Ref<typeof TreeNode> = ref({});
@@ -44,15 +44,15 @@ const selectedLanguage = inject(selectedLanguageKey);
 
 const toast = useToast();
 const { $gettext } = useGettext();
-const ERROR = "error";  // not user-facing
+const ERROR = "error"; // not user-facing
 
 const showMoveHereButton = (rowId: string) => {
     return (
-        movingItem.value.key
-        && rowId in selectedKeys.value
-        && rowId !== movingItem.value.key
-        && rowId !== movingItem.value.data.parent_id
-        && rowId !== movingItem.value.data.controlled_list_id
+        movingItem.value.key &&
+        rowId in selectedKeys.value &&
+        rowId !== movingItem.value.key &&
+        rowId !== movingItem.value.data.parent_id &&
+        rowId !== movingItem.value.data.controlled_list_id
     );
 };
 
@@ -75,25 +75,30 @@ const onRowSelect = (node: typeof TreeNode) => {
         [node.key]: true,
     };
     if (node.data.name) {
-        tree.value.filter(list => list.data.id !== node.data.id)
-            .forEach(list => collapseNodesRecursive(list));
+        tree.value
+            .filter((list) => list.data.id !== node.data.id)
+            .forEach((list) => collapseNodesRecursive(list));
     }
 };
 
 const onReorder = async (item: ControlledListItem, up: boolean) => {
-    const list: ControlledList = findNodeInTree(tree.value, item.controlled_list_id).data;
-    const siblings: ControlledListItem[] = (
-        item.parent_id
+    const list: ControlledList = findNodeInTree(
+        tree.value,
+        item.controlled_list_id,
+    ).data;
+    const siblings: ControlledListItem[] = item.parent_id
         ? findNodeInTree(tree.value, item.parent_id).children.map(
-            (child: typeof TreeNode) => child.data)
-        : list.items
-    );
+              (child: typeof TreeNode) => child.data,
+          )
+        : list.items;
 
     reorderItem(list, item, siblings, up);
 
     const newList = await postListToServer(list, toast, $gettext);
     if (newList) {
-        const oldListIndex = tree.value.findIndex(listNode => listNode.data.id === list.id);
+        const oldListIndex = tree.value.findIndex(
+            (listNode) => listNode.data.id === list.id,
+        );
         tree.value = [
             ...tree.value.slice(0, oldListIndex),
             listAsNode(newList, selectedLanguage.value),
@@ -107,11 +112,9 @@ const onReorder = async (item: ControlledListItem, up: boolean) => {
 };
 
 const isFirstItem = (item: ControlledListItem) => {
-    const siblings: typeof TreeNode[] = (
-        item.parent_id
+    const siblings: (typeof TreeNode)[] = item.parent_id
         ? findNodeInTree(tree.value, item.parent_id).data.children
-        : findNodeInTree(tree.value, item.controlled_list_id).data.items
-    );
+        : findNodeInTree(tree.value, item.controlled_list_id).data.items;
     if (!siblings) {
         throw new Error("Unexpected lack of siblings");
     }
@@ -119,11 +122,9 @@ const isFirstItem = (item: ControlledListItem) => {
 };
 
 const isLastItem = (item: ControlledListItem) => {
-    const siblings: typeof TreeNode[] = (
-        item.parent_id
+    const siblings: (typeof TreeNode)[] = item.parent_id
         ? findNodeInTree(tree.value, item.parent_id).data.children
-        : findNodeInTree(tree.value, item.controlled_list_id).data.items
-    );
+        : findNodeInTree(tree.value, item.controlled_list_id).data.items;
     if (!siblings) {
         throw new Error("Unexpected lack of siblings");
     }
@@ -174,8 +175,10 @@ const setParent = async (parentNode: typeof TreeNode) => {
     let errorText;
     const setListAndSortOrderRecursive = (child: ControlledListItem) => {
         child.controlled_list_id = parentNode.key;
-        child.sortorder = -1;  // tells backend to renumber
-        child.children.forEach(grandchild => setListAndSortOrderRecursive(grandchild));
+        child.sortorder = -1; // tells backend to renumber
+        child.children.forEach((grandchild) =>
+            setListAndSortOrderRecursive(grandchild),
+        );
     };
 
     const item = movingItem.value.data;
@@ -187,13 +190,16 @@ const setParent = async (parentNode: typeof TreeNode) => {
     }
 
     try {
-        const response = await fetch(arches.urls.controlled_list_item(item.id), {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": Cookies.get("csrftoken"),
+        const response = await fetch(
+            arches.urls.controlled_list_item(item.id),
+            {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": Cookies.get("csrftoken"),
+                },
+                body: JSON.stringify(item),
             },
-            body: JSON.stringify(item),
-        });
+        );
         if (response.ok) {
             movingItem.value = {};
             refetcher.value += 1;
@@ -248,9 +254,16 @@ const setParent = async (parentNode: typeof TreeNode) => {
         </template>
         <template #default="slotProps">
             <span
-                :class="slotProps.node.key === movingItem.key ? 'is-adjusting-parent' : ''"
+                :class="
+                    slotProps.node.key === movingItem.key
+                        ? 'is-adjusting-parent'
+                        : ''
+                "
             >
-                {{ slotProps.node.data.name ?? bestLabel(slotProps.node.data, selectedLanguage.code).value }}
+                {{
+                    slotProps.node.data.name ??
+                    bestLabel(slotProps.node.data, selectedLanguage.code).value
+                }}
                 <div
                     v-if="movingItem.key"
                     class="actions"
@@ -260,7 +273,13 @@ const setParent = async (parentNode: typeof TreeNode) => {
                         v-if="showMoveHereButton(slotProps.node.key)"
                         type="button"
                         class="move-button"
-                        :label="$gettext('Move %{item} here', { item: movingItem.label }, true)"
+                        :label="
+                            $gettext(
+                                'Move %{item} here',
+                                { item: movingItem.label },
+                                true,
+                            )
+                        "
                         @click="setParent(slotProps.node)"
                     />
                 </div>
@@ -300,7 +319,10 @@ const setParent = async (parentNode: typeof TreeNode) => {
                         />
                     </span>
                     <Button
-                        v-if="!slotProps.node.data.name && slotProps.node.key in selectedKeys"
+                        v-if="
+                            !slotProps.node.data.name &&
+                            slotProps.node.key in selectedKeys
+                        "
                         type="button"
                         icon="fa fa-arrows-alt"
                         :aria-label="$gettext('Change item parent')"

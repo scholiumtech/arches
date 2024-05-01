@@ -20,7 +20,10 @@ import {
 } from "@/components/ControlledListManager/const.ts";
 import { bestLabel } from "@/components/ControlledListManager/utils.ts";
 
-import type { FileUploadBeforeSendEvent, FileUploadUploadEvent } from "primevue/fileupload";
+import type {
+    FileUploadBeforeSendEvent,
+    FileUploadUploadEvent,
+} from "primevue/fileupload";
 import type {
     ControlledListItem,
     ControlledListItemImage,
@@ -39,36 +42,58 @@ const slateBlue = "#2d3c4b"; // todo: import from theme somewhere
 provide(itemKey, { item });
 
 const appendItemLabel = computed(() => {
-    return (newLabel: Label | NewLabel) => { item.value.labels.push(newLabel); };
+    return (newLabel: Label | NewLabel) => {
+        item.value.labels.push(newLabel);
+    };
 });
 const removeItemLabel = computed(() => {
     return (removedLabel: Label | NewLabel) => {
-        const toDelete = item.value.labels.findIndex((l: Label | NewLabel) => l.id === removedLabel.id);
+        const toDelete = item.value.labels.findIndex(
+            (l: Label | NewLabel) => l.id === removedLabel.id,
+        );
         item.value.labels.splice(toDelete, 1);
     };
 });
 const updateItemLabel = computed(() => {
     return (updatedLabel: Label) => {
-        const toUpdate = item.value.labels.find((l: Label) => l.id === updatedLabel.id);
+        const toUpdate = item.value.labels.find(
+            (l: Label) => l.id === updatedLabel.id,
+        );
         toUpdate.language_id = updatedLabel.language_id;
         toUpdate.value = updatedLabel.value;
     };
 });
 
 const appendImageMetadata = computed(() => {
-    return (newMetadata: ControlledListItemImageMetadata | NewControlledListItemImageMetadata) => {
-        item.value.images.find(
-            (i: ControlledListItemImage) => i.id === newMetadata.controlled_list_item_image_id
-        ).metadata.push(newMetadata);
+    return (
+        newMetadata:
+            | ControlledListItemImageMetadata
+            | NewControlledListItemImageMetadata,
+    ) => {
+        item.value.images
+            .find(
+                (i: ControlledListItemImage) =>
+                    i.id === newMetadata.controlled_list_item_image_id,
+            )
+            .metadata.push(newMetadata);
     };
 });
 const removeImageMetadata = computed(() => {
-    return (removedMetadata: ControlledListItemImageMetadata | NewControlledListItemImageMetadata) => {
+    return (
+        removedMetadata:
+            | ControlledListItemImageMetadata
+            | NewControlledListItemImageMetadata,
+    ) => {
         const imageFromItem = item.value.images.find(
-            (i: ControlledListItemImage) => i.id === removedMetadata.controlled_list_item_image_id
+            (i: ControlledListItemImage) =>
+                i.id === removedMetadata.controlled_list_item_image_id,
         );
         const toDelete = imageFromItem.metadata.findIndex(
-            (m: ControlledListItemImageMetadata | NewControlledListItemImageMetadata) => m.id === removedMetadata.id
+            (
+                m:
+                    | ControlledListItemImageMetadata
+                    | NewControlledListItemImageMetadata,
+            ) => m.id === removedMetadata.id,
         );
         imageFromItem.metadata.splice(toDelete, 1);
     };
@@ -76,9 +101,12 @@ const removeImageMetadata = computed(() => {
 const updateImageMetadata = computed(() => {
     return (updatedMetadata: ControlledListItemImageMetadata) => {
         const imageFromItem = item.value.images.find(
-            (i: ControlledListItemImage) => i.id === updatedMetadata.controlled_list_item_image_id
+            (i: ControlledListItemImage) =>
+                i.id === updatedMetadata.controlled_list_item_image_id,
         );
-        const toUpdate = imageFromItem.metadata.find((m: ControlledListItemImageMetadata) => m.id === updatedMetadata.id);
+        const toUpdate = imageFromItem.metadata.find(
+            (m: ControlledListItemImageMetadata) => m.id === updatedMetadata.id,
+        );
         toUpdate.metadata_type = updatedMetadata.metadata_type;
         toUpdate.language_id = updatedMetadata.language_id;
         toUpdate.value = updatedMetadata.value;
@@ -88,7 +116,7 @@ const updateImageMetadata = computed(() => {
 const removeImage = computed(() => {
     return (removedImage: ControlledListItemImage) => {
         const toDelete = item.value.images.findIndex(
-            (i: ControlledListItemImage) => i.id === removedImage.id
+            (i: ControlledListItemImage) => i.id === removedImage.id,
         );
         item.value.images.splice(toDelete, 1);
     };
@@ -125,7 +153,7 @@ const onUpload = (event: FileUploadUploadEvent) => {
             :href="item.uri"
             rel="noreferrer"
             target="_blank"
-            style="font-size: small; color: blue;"
+            style="font-size: small; color: blue"
         >
             {{ item.uri }}
         </a>
@@ -147,9 +175,11 @@ const onUpload = (event: FileUploadUploadEvent) => {
     <div class="field-editor-container">
         <h4>{{ $gettext("List Item URI") }}</h4>
         <p>
-            {{ $gettext(
-                "Optionally, provide a URI for your list item. Useful if your list item is formally defined in a thesaurus or authority document."
-            ) }}
+            {{
+                $gettext(
+                    "Optionally, provide a URI for your list item. Useful if your list item is formally defined in a thesaurus or authority document.",
+                )
+            }}
         </p>
         <ItemCharacteristic
             field="uri"
@@ -182,7 +212,7 @@ const onUpload = (event: FileUploadUploadEvent) => {
             />
             <span
                 v-if="!item.images.length"
-                :style="{ fontSize: 'small'}"
+                :style="{ fontSize: 'small' }"
             >
                 {{ $gettext("No images.") }}
             </span>
@@ -239,7 +269,7 @@ p {
     gap: 32px;
 }
 
-:deep(input[type=file]) {
+:deep(input[type="file"]) {
     /* override arches.css */
     /* PrimeVue uses a hidden input for screen readers */
     display: none;

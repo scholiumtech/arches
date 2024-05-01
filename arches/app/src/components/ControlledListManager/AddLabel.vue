@@ -5,13 +5,13 @@ import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 
-import { itemKey, ALT_LABEL, PREF_LABEL } from "@/components/ControlledListManager/const.ts";
+import {
+    itemKey,
+    ALT_LABEL,
+    PREF_LABEL,
+} from "@/components/ControlledListManager/const.ts";
 
-import type {
-    Label,
-    NewLabel,
-    ValueType,
-} from "@/types/ControlledListManager";
+import type { Label, NewLabel, ValueType } from "@/types/ControlledListManager";
 
 const props: { type: ValueType } = defineProps(["type"]);
 const { item } = inject(itemKey);
@@ -21,18 +21,18 @@ const slateBlue = "#2d3c4b"; // todo: import from theme somewhere
 
 const newLabel: NewLabel = computed(() => {
     const otherNewLabels = item.value.labels.filter(
-        (l: NewLabel | Label) => typeof l.id === "number"
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any 
+        (l: NewLabel | Label) => typeof l.id === "number",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ) as any as NewLabel[];
     const maxOtherNewLabelId = Math.max(
-        ...otherNewLabels.map(l => l.id),
+        ...otherNewLabels.map((l) => l.id),
         1000,
     );
     return {
         id: maxOtherNewLabelId + 1,
         valuetype_id: props.type,
         language_id: arches.activeLanguage,
-        value: '',
+        value: "",
         item_id: item.value.id,
     };
 });
