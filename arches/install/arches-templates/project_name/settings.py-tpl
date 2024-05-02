@@ -36,7 +36,9 @@ SEARCH_COMPONENT_LOCATIONS.append('{{ project_name }}.search_components')
 
 LOCALE_PATHS.append(os.path.join(APP_ROOT, 'locale'))
 
-FILE_TYPE_CHECKING = False
+# TODO: Remove in Arches 8.0
+FILE_TYPE_CHECKING = True
+
 FILE_TYPES = ["bmp", "gif", "jpg", "jpeg", "pdf", "png", "psd", "rtf", "tif", "tiff", "xlsx", "csv", "zip"]
 FILENAME_GENERATOR = "arches.app.utils.storage_filename_generator.generate_filename"
 UPLOADED_FILES_DIR = "uploadedfiles"

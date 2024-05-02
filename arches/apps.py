@@ -1,6 +1,19 @@
+import warnings
+
 from django.conf import settings
 from django.core.checks import register, Tags, Error, Warning
 
+### GLOBAL DEPRECATIONS ###
+FILE_TYPE_CHECKING_MSG = (
+    "FILE_TYPE_CHECKING=False is deprecated. Starting with Arches 8.0, "
+    "uploaded files will always be validated against the FILE_TYPES setting. "
+    "To opt into this behavior now set FILE_TYPE_CHECKING = True."
+)
+if not settings.FILE_TYPE_CHECKING:
+    warnings.warn(FILE_TYPE_CHECKING_MSG, DeprecationWarning)
+
+
+### SYSTEM CHECKS ###
 
 @register(Tags.security)
 def check_cache_backend_for_production(app_configs, **kwargs):

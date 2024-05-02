@@ -609,7 +609,9 @@ ETL_MODULE_LOCATIONS = [
     "arches.app.etl_modules",
 ]
 
+# TODO: Remove in Arches 8.0
 FILE_TYPE_CHECKING = False
+
 FILE_TYPES = ["bmp", "gif", "jpg", "jpeg", "pdf", "png", "psd", "rtf", "tif", "tiff", "xlsx", "csv", "zip"]
 FILENAME_GENERATOR = "arches.app.utils.storage_filename_generator.generate_filename"
 UPLOADED_FILES_DIR = "uploadedfiles"

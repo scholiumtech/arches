@@ -68,6 +68,9 @@ ELASTICSEARCH_PREFIX = "test"
 TEST_RUNNER = "tests.base_test.ArchesTestRunner"
 SILENCED_SYSTEM_CHECKS.append("arches.W001")  # Cache backend does not support rate-limiting
 
+# TODO: remove in Arches 8.0
+FILE_TYPE_CHECKING = True
+
 # could add Chrome, PhantomJS etc... here
 LOCAL_BROWSERS = []  # ['Firefox']
 
