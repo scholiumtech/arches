@@ -3,9 +3,11 @@ import arches from "arches";
 import { computed, provide, ref } from "vue";
 import { useRouter } from "vue-router";
 
+import ConfirmDialog from "primevue/confirmdialog";
 import ProgressSpinner from "primevue/progressspinner";
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
+import Toast from "primevue/toast";
 
 import ControlledListSplash from "@/components/ControlledListManager/ControlledListSplash.vue";
 import ItemEditor from "@/components/ControlledListManager/ItemEditor.vue";
@@ -51,41 +53,46 @@ const panel = computed(() => {
 </script>
 
 <template>
-    <div class="list-editor-container">
-        <ListHeader />
-        <Splitter
-            :pt="{
-                root: { style: { height: '97%' } },
-                gutter: { style: { background: lightGray } },
-                gutterHandler: { style: { background: lightGray } },
-            }"
-        >
-            <SplitterPanel
-                :size="40"
-                :min-size="25"
+    <!-- Subtract size of arches toolbars -->
+    <div style="width: calc(100vw - 50px); height: calc(100vh - 50px)">
+        <div class="list-editor-container">
+            <ListHeader />
+            <Splitter
                 :pt="{
-                    root: { style: { display: 'flex', flexDirection: 'column' } },
+                    root: { style: { height: '97%' } },
+                    gutter: { style: { background: lightGray } },
+                    gutterHandler: { style: { background: lightGray } },
                 }"
             >
-                <Suspense>
-                    <ListTree />
-                    <template #fallback>
-                        <ProgressSpinner />
-                    </template>
-                </Suspense>
-            </SplitterPanel>
-            <SplitterPanel
-                :size="60"
-                :min-size="25"
-                :style="{ margin: '1rem 0rem 1rem 1rem', overflowY: 'auto', maxWidth: '1200px', paddingRight: '7%' }"
-            >
-                <component
-                    :is="panel"
-                    :key="displayedRow?.id ?? 'splash'"
-                />
-            </SplitterPanel>
-        </Splitter>
+                <SplitterPanel
+                    :size="40"
+                    :min-size="25"
+                    :pt="{
+                        root: { style: { display: 'flex', flexDirection: 'column' } },
+                    }"
+                >
+                    <Suspense>
+                        <ListTree />
+                        <template #fallback>
+                            <ProgressSpinner />
+                        </template>
+                    </Suspense>
+                </SplitterPanel>
+                <SplitterPanel
+                    :size="60"
+                    :min-size="25"
+                    :style="{ margin: '1rem 0rem 1rem 1rem', overflowY: 'auto', maxWidth: '1200px', paddingRight: '7%' }"
+                >
+                    <component
+                        :is="panel"
+                        :key="displayedRow?.id ?? 'splash'"
+                    />
+                </SplitterPanel>
+            </Splitter>
+        </div>
     </div>
+    <Toast />
+    <ConfirmDialog :draggable="false" />
 </template>
 
 <style scoped>

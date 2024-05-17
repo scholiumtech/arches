@@ -286,7 +286,6 @@ await fetchLists();
             :pt="{ root: { style: { background: buttonGreen } } }"
             @click="createList"
         />
-        <ConfirmDialog :draggable="false" />
         <SplitButton
             class="list-button"
             :label="$gettext('Delete')"
