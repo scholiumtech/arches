@@ -71,6 +71,10 @@ const collapseNodesRecursive = (node: TreeNode) => {
 };
 
 const onRowSelect = (node: TreeNode) => {
+    if (isMultiSelecting.value || movingItem.value.key) {
+        return;
+    }
+
     let priorListId;
     if (displayedRow.value) {
         priorListId = (displayedRow.value as ControlledListItem).controlled_list_id ?? displayedRow.value.id;
@@ -91,11 +95,11 @@ const onRowSelect = (node: TreeNode) => {
 };
 
 const onReorder = async (item: ControlledListItem, up: boolean) => {
-    const list: ControlledList = findNodeInTree(tree.value, item.controlled_list_id).data;
+    const { found } : { found: ControlledList } = findNodeInTree(tree.value, item.controlled_list_id);
+    const list = found.data;
     const siblings: ControlledListItem[] = (
         item.parent_id
-        ? findNodeInTree(tree.value, item.parent_id).children.map(
-            (child: TreeNode) => child.data)
+        ? findNodeInTree(tree.value, item.parent_id).found.data.children
         : list.items
     );
 
@@ -119,8 +123,8 @@ const onReorder = async (item: ControlledListItem, up: boolean) => {
 const isFirstItem = (item: ControlledListItem) => {
     const siblings: TreeNode[] = (
         item.parent_id
-        ? findNodeInTree(tree.value, item.parent_id).data.children
-        : findNodeInTree(tree.value, item.controlled_list_id).data.items
+        ? findNodeInTree(tree.value, item.parent_id).found.data.children
+        : findNodeInTree(tree.value, item.controlled_list_id).found.data.items
     );
     if (!siblings) {
         throw new Error("Unexpected lack of siblings");
@@ -131,8 +135,8 @@ const isFirstItem = (item: ControlledListItem) => {
 const isLastItem = (item: ControlledListItem) => {
     const siblings: TreeNode[] = (
         item.parent_id
-        ? findNodeInTree(tree.value, item.parent_id).data.children
-        : findNodeInTree(tree.value, item.controlled_list_id).data.items
+        ? findNodeInTree(tree.value, item.parent_id).found.data.children
+        : findNodeInTree(tree.value, item.controlled_list_id).found.data.items
     );
     if (!siblings) {
         throw new Error("Unexpected lack of siblings");
@@ -155,7 +159,7 @@ const addChild = async (parent_id: string) => {
         });
         if (response.ok) {
             const newItem = await response.json();
-            const parent = findNodeInTree(tree.value, parent_id);
+            const { found: parent } = findNodeInTree(tree.value, parent_id);
             parent.children.push(itemAsNode(newItem, selectedLanguage.value));
             if (parent.data.name) {
                 // Parent node is a list
@@ -232,7 +236,7 @@ const setParent = async (parentNode: TreeNode) => {
 <template>
     <ListTreeControls
         :key="refetcher"
-        v-model="tree"
+        v-model:tree="tree"
         v-model:expanded-keys="expandedKeys"
         v-model:selected-keys="selectedKeys"
         v-model:moving-item="movingItem"

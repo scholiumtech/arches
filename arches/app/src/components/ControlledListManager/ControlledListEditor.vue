@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import arches from "arches";
 import { computed, provide, ref } from "vue";
+import { useRouter } from "vue-router";
 
 import ProgressSpinner from "primevue/progressspinner";
 import Splitter from "primevue/splitter";
@@ -18,10 +19,18 @@ import type { ControlledListItem, Selectable } from "@/types/ControlledListManag
 import type { Language } from "@/types/arches";
 
 const lightGray = "#f4f4f4";
+const router = useRouter();
 
 const displayedRow: Ref<Selectable | null> = ref(null);
 function setDisplayedRow(val: Selectable | null) {
     displayedRow.value = val;
+    if (val === null) {
+        router.push({ name: 'splash' });
+    } else if ((val as ControlledListItem).controlled_list_id) {
+        router.push({ name: 'item', params: { id : val.id } });
+    } else {
+        router.push({ name: 'list', params: { id : val.id } });
+    }
 }
 provide(displayedRowKey, { displayedRow, setDisplayedRow });
 

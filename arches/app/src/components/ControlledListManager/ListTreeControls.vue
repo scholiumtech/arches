@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import arches from "arches";
 import Cookies from "js-cookie";
-import { inject } from "vue";
+import { inject, watch } from "vue";
 import { useGettext } from "vue3-gettext";
+import { useRoute } from "vue-router";
 
 import { displayedRowKey, selectedLanguageKey } from "@/components/ControlledListManager/const.ts";
-import { listAsNode } from "@/components/ControlledListManager/utils.ts";
+import { findNodeInTree, listAsNode } from "@/components/ControlledListManager/utils.ts";
 
 import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
@@ -27,7 +28,7 @@ const ERROR = "error";
 const { setDisplayedRow } = inject(displayedRowKey) as DisplayedRowRefAndSetter;
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 
-const controlledListItemsTree = defineModel<TreeNode[]>({ required: true });
+const controlledListItemsTree = defineModel<TreeNode[]>("tree", { required: true });
 const expandedKeys = defineModel<TreeExpandedKeys>("expandedKeys", { required: true });
 const selectedKeys = defineModel<TreeSelectionKeys>("selectedKeys", { required: true });
 const movingItem = defineModel<TreeNode>("movingItem", { required: true });
@@ -37,6 +38,7 @@ const { $gettext, $ngettext } = useGettext();
 const buttonGreen = "#10b981";
 
 const confirm = useConfirm();
+const route = useRoute();
 const toast = useToast();
 
 const deleteDropdownOptions = [
@@ -47,6 +49,47 @@ const deleteDropdownOptions = [
         },
     },
 ];
+
+// React to route changes.
+// Add list tree as dependency so it runs on initial fetch.
+watch([() => { return { ...route } }, controlledListItemsTree],
+    ([newRoute, oldRoute]) => {
+        switch (newRoute.name) {
+            case 'splash':
+                setDisplayedRow(null);
+                break;
+            case 'list':
+                if (!controlledListItemsTree.value.length) {
+                    return;
+                }
+                const list = controlledListItemsTree.value.find(
+                    node => node.data.id === newRoute.params.id
+                );
+                if (list) {
+                    setDisplayedRow(list.data);
+                    expandedKeys.value = { [list.data.id]: true };
+                    selectedKeys.value = { [list.data.id]: true };
+                } else {
+                    setDisplayedRow(null);
+                }
+                break;
+            case 'item':
+                if (!controlledListItemsTree.value.length) {
+                    return;
+                }
+                const { found, path } = findNodeInTree(
+                    controlledListItemsTree.value, newRoute.params.id
+                );
+                if (found) {
+                    setDisplayedRow(found.data);
+                    const itemsToExpandIds = path.map((itemInPath) => itemInPath.key);
+                    expandedKeys.value = Object.fromEntries(
+                        [found.data.controlled_list_id, ...itemsToExpandIds].map(x => [x, true])
+                    );
+                    selectedKeys.value = { [found.data.id]: true };
+                }
+        };
+});
 
 const expandAll = () => {
     for (const node of controlledListItemsTree.value) {
