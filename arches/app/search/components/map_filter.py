@@ -26,7 +26,9 @@ details = {
 
 
 class MapFilter(BaseSearchFilter):
-    def append_dsl(self, search_results_object, permitted_nodegroups, include_provisional):
+    def append_dsl(
+        self, search_results_object, permitted_nodegroups, include_provisional
+    ):
         search_query = Bool()
         querysting_params = self.request.GET.get(details["componentname"], "")
         spatial_filter = JSONDeserializer().deserialize(querysting_params)
@@ -83,7 +85,9 @@ class MapFilter(BaseSearchFilter):
                 search_results_object["query"].add_query(search_query)
 
         try:
-            search_results_object[details["componentname"]]["search_buffer"] = feature_geom
+            search_results_object[details["componentname"]][
+                "search_buffer"
+            ] = feature_geom
         except NameError:
             logger.info(_("Feature geometry is not defined"))
 
@@ -106,7 +110,11 @@ def _buffer(geojson, width=0, unit="ft"):
                 """SELECT ST_TRANSFORM(
                     ST_BUFFER(ST_TRANSFORM(ST_SETSRID(%s::geometry, 4326), %s), %s),
                 4326)""",
-                (geom.hex.decode("utf-8"), settings.ANALYSIS_COORDINATE_SYSTEM_SRID, width),
+                (
+                    geom.hex.decode("utf-8"),
+                    settings.ANALYSIS_COORDINATE_SYSTEM_SRID,
+                    width,
+                ),
             )
             res = cursor.fetchone()
             geom = GEOSGeometry(res[0], srid=4326)
