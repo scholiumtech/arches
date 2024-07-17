@@ -395,7 +395,9 @@ class SearchResultsExporter(object):
                 if node.exportable:
                     datatype = datatype_factory.get_instance(node.datatype)
                     if self.export_system_values:
-                        node_value = datatype.transform_export_values(value, **{"concept_export_value_type": "id"})
+                        node_value = datatype.transform_export_values(
+                            value, **{"concept_export_value_type": "id"}
+                        )
                     else:
                         node_value = datatype.get_display_value(tile, node)
                     label = node.fieldname if use_fieldname is True else node.name
@@ -498,15 +500,16 @@ class SearchResultsExporter(object):
                             properties[header] = None
                 for key, value in instance.items():
                     if key == geometry_field:
-                        geometry = GEOSGeometry(value, srid=4326)
-                        for geom in geometry:
-                            feature = {}
-                            feature["geometry"] = JSONDeserializer().deserialize(
-                                GEOSGeometry(geom, srid=4326).json
-                            )
-                            feature["type"] = "Feature"
-                            feature["properties"] = properties
-                            features.append(feature)
+                        if isinstance(value, GeometryCollection):
+                            geometry = GEOSGeometry(value, srid=4326)
+                            for geom in geometry:
+                                feature = {}
+                                feature["geometry"] = JSONDeserializer().deserialize(
+                                    GEOSGeometry(geom, srid=4326).json
+                                )
+                                feature["type"] = "Feature"
+                                feature["properties"] = properties
+                                features.append(feature)
 
         feature_collection = {"type": "FeatureCollection", "features": features}
         return feature_collection
