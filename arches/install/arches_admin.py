@@ -128,9 +128,7 @@ class ArchesProjectCommand(TemplateCommand):
         )
 
         # need to manually replace instances of {{ project_name }} in some files
-        path_to_project = (
-            os.path.join(target) if target else os.path.join(os.getcwd(), project_name)
-        )
+        path_to_project = target if target else os.path.join(os.getcwd(), project_name)
 
         for relative_file_path in [
             os.path.join(project_name, "apps.py"),
@@ -138,6 +136,8 @@ class ArchesProjectCommand(TemplateCommand):
             "pyproject.toml",
             ".pre-commit-config.yaml",
             ".github/workflows/main.yml",
+            "vitest.config.mts",
+            "vitest.setup.mts",
         ]:  # relative to app root directory
             file = open(os.path.join(path_to_project, relative_file_path), "r")
             file_data = file.read()
