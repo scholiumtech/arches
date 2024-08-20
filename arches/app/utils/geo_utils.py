@@ -23,7 +23,9 @@ class GeoUtils(object):
     def create_geom_collection_from_geojson(self, geojson):
         geoms = []
         for feature in geojson["features"]:
-            geoms.append(GEOSGeometry(JSONSerializer().serialize(feature["geometry"])))
+            geoms.append(
+                GEOSGeometry(JSONSerializer().serialize(feature["geometry"])), srid=4326
+            )
         return GeometryCollection(geoms)
 
     def get_bounds_from_geojson(self, geojson):

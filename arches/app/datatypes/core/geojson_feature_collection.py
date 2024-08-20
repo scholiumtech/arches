@@ -35,9 +35,9 @@ class GeojsonFeatureCollectionDataType(BaseDataType):
 
         def validate_geom_bbox(geom):
             try:
-                bbox = Polygon(settings.DATA_VALIDATION_BBOX)
+                bbox = Polygon(settings.DATA_VALIDATION_BBOX, srid=4326)
 
-                if bbox.contains(geom) == False:
+                if bbox.contains(geom) is False:
                     message = _(
                         "Geometry does not fall within the bounding box of the selected coordinate system. \
                          Adjust your coordinates or your settings.DATA_EXTENT_VALIDATION property."
@@ -76,7 +76,9 @@ class GeojsonFeatureCollectionDataType(BaseDataType):
         if value is not None:
             for feature in value["features"]:
                 try:
-                    geom = GEOSGeometry(JSONSerializer().serialize(feature["geometry"]))
+                    geom = GEOSGeometry(
+                        JSONSerializer().serialize(feature["geometry"]), srid=4326
+                    )
                     if geom.valid:
                         validate_geom_bbox(geom)
                     else:
@@ -167,7 +169,7 @@ class GeojsonFeatureCollectionDataType(BaseDataType):
     def transform_export_values(self, value, *args, **kwargs):
         wkt_geoms = []
         for feature in value["features"]:
-            wkt_geoms.append(GEOSGeometry(json.dumps(feature["geometry"])))
+            wkt_geoms.append(GEOSGeometry(json.dumps(feature["geometry"])), srid=4326)
         return GeometryCollection(wkt_geoms)
 
     def update(self, tile, data, nodeid=None, action=None):
@@ -270,7 +272,7 @@ class GeojsonFeatureCollectionDataType(BaseDataType):
         bounds = None
         for feature in node_data["features"]:
             geom_collection = GEOSGeometry(
-                JSONSerializer().serialize(feature["geometry"])
+                JSONSerializer().serialize(feature["geometry"]), srid=4326
             )
 
             if bounds is None:
