@@ -4,7 +4,15 @@ from django.db import connection
 from django.utils.translation import gettext as _
 from arches.app.models.system_settings import settings
 from arches.app.utils.betterJSONSerializer import JSONSerializer, JSONDeserializer
-from arches.app.search.elasticsearch_dsl_builder import Bool, Match, Query, Nested, Term, Terms, GeoShape
+from arches.app.search.elasticsearch_dsl_builder import (
+    Bool,
+    Match,
+    Query,
+    Nested,
+    Term,
+    Terms,
+    GeoShape,
+)
 from arches.app.search.components.base import BaseSearchFilter
 from arches.app.search.search_engine_factory import SearchEngineFactory
 from arches.app.search.mappings import RESOURCES_INDEX
@@ -34,7 +42,7 @@ class MapFilter(BaseSearchFilter):
         spatial_filter = JSONDeserializer().deserialize(querysting_params)
         if details["componentname"] not in search_results_object:
             search_results_object[details["componentname"]] = {}
-        
+
         if "features" in spatial_filter:
             if len(spatial_filter["features"]) > 0:
                 feature_geom = spatial_filter["features"][0]["geometry"]
@@ -42,14 +50,22 @@ class MapFilter(BaseSearchFilter):
                 if "properties" in spatial_filter["features"][0]:
                     feature_properties = spatial_filter["features"][0]["properties"]
 
-                add_geoshape_query_to_search_query(feature_geom, feature_properties, permitted_nodegroups, include_provisional, search_query)
+                add_geoshape_query_to_search_query(
+                    feature_geom,
+                    feature_properties,
+                    permitted_nodegroups,
+                    include_provisional,
+                    search_query,
+                )
                 search_results_object["query"].add_query(search_query)
 
         elif "featureid" in spatial_filter and "resourceid" in spatial_filter:
             se = SearchEngineFactory().create()
             main_query = Query(se)
             nested_query = Nested(path="geometries")
-            match_feature = Match(field="geometries.geom.features.id", query=spatial_filter["featureid"])
+            match_feature = Match(
+                field="geometries.geom.features.id", query=spatial_filter["featureid"]
+            )
 
             # Create a Bool query for conditions inside the nested path
             bool_nested_query = Bool()
@@ -57,30 +73,40 @@ class MapFilter(BaseSearchFilter):
             nested_query.add_query(bool_nested_query.dsl)
 
             bool_query = Bool()
-            match_resource = Term(field="resourceinstanceid", term=spatial_filter["resourceid"])
-            bool_query.must(match_resource.dsl)  # Match resource instance ID at the document level
+            match_resource = Term(
+                field="resourceinstanceid", term=spatial_filter["resourceid"]
+            )
+            bool_query.must(
+                match_resource.dsl
+            )  # Match resource instance ID at the document level
             bool_query.must(nested_query.dsl)  # Add the nested query
-            
+
             # Set the entire bool query to the main query object
             main_query.add_query(bool_query.dsl)
 
             response = main_query.search(index=RESOURCES_INDEX)
             geometries = []
-            for hit in response['hits']['hits']:
+            for hit in response["hits"]["hits"]:
                 if len(geometries) > 0:
                     break
-                for geom in hit['_source']['geometries']:
+                for geom in hit["_source"]["geometries"]:
                     if len(geometries) > 0:
                         break
-                    for feature in geom['geom']['features']:
+                    for feature in geom["geom"]["features"]:
                         if len(geometries) > 0:
                             break
-                        if feature['id'] == spatial_filter["featureid"]:
+                        if feature["id"] == spatial_filter["featureid"]:
                             geometries.append(feature)
 
             if len(geometries) > 0:
                 feature_geom = geometries[0]["geometry"]
-                buffered_feature_geom = add_geoshape_query_to_search_query(feature_geom, spatial_filter, permitted_nodegroups, include_provisional, search_query)
+                buffered_feature_geom = add_geoshape_query_to_search_query(
+                    feature_geom,
+                    spatial_filter,
+                    permitted_nodegroups,
+                    include_provisional,
+                    search_query,
+                )
                 search_results_object[details["componentname"]] = buffered_feature_geom
                 search_results_object["query"].add_query(search_query)
 
@@ -120,7 +146,14 @@ def _buffer(geojson, width=0, unit="ft"):
             geom = GEOSGeometry(res[0], srid=4326)
     return geom
 
-def add_geoshape_query_to_search_query(feature_geom, feature_properties, permitted_nodegroups, include_provisional, search_query):
+
+def add_geoshape_query_to_search_query(
+    feature_geom,
+    feature_properties,
+    permitted_nodegroups,
+    include_provisional,
+    search_query,
+):
 
     buffer = {"width": 0, "unit": "ft"}
     if "buffer" in feature_properties:
@@ -129,7 +162,9 @@ def add_geoshape_query_to_search_query(feature_geom, feature_properties, permitt
     search_buffer = _buffer(feature_geom, int(buffer["width"]), buffer["unit"])
     feature_geom = JSONDeserializer().deserialize(search_buffer.geojson)
     geoshape = GeoShape(
-        field="geometries.geom.features.geometry", type=feature_geom["type"], coordinates=feature_geom["coordinates"]
+        field="geometries.geom.features.geometry",
+        type=feature_geom["type"],
+        coordinates=feature_geom["coordinates"],
     )
     invert_spatial_search = False
     if "inverted" in feature_properties:
@@ -142,7 +177,9 @@ def add_geoshape_query_to_search_query(feature_geom, feature_properties, permitt
         spatial_query.filter(geoshape)
 
     # get the nodegroup_ids that the user has permission to search
-    spatial_query.filter(Terms(field="geometries.nodegroup_id", terms=permitted_nodegroups))
+    spatial_query.filter(
+        Terms(field="geometries.nodegroup_id", terms=permitted_nodegroups)
+    )
 
     if include_provisional is False:
         spatial_query.filter(Terms(field="geometries.provisional", terms=["false"]))

@@ -573,7 +573,7 @@ class SearchTests(ArchesTestCase):
                 "id": "test",
                 "text": "test",
                 "value": "test",
-                "inverted": False
+                "inverted": False,
             }
         ]
         response_json = get_response_json(self.client, term_filter=term_filter)
@@ -595,7 +595,7 @@ class SearchTests(ArchesTestCase):
                 "id": "test",
                 "text": "test",
                 "value": "test",
-                "inverted": True
+                "inverted": True,
             }
         ]
         response_json = get_response_json(self.client, term_filter=term_filter)
