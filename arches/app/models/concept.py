@@ -1648,9 +1648,14 @@ class ConceptValue(object):
         query.delete(index=CONCEPTS_INDEX)
 
     def get_scheme_id(self):
-        result = se.search(index=CONCEPTS_INDEX, id=self.id)
-        if result["found"]:
-            return Concept(result["top_concept"])
+        query = Query(se=se, start=0, limit=100)
+        bool_query = Bool()
+        bool_query.filter(Term(field="id", term=self.id))
+        query.add_query(bool_query)
+        results = query.search(index=CONCEPTS_INDEX)
+
+        if len(results["hits"]["hits"]):
+            return Concept(results["hits"]["hits"][0]["_source"]["top_concept"])
         else:
             return None
 
@@ -1723,6 +1728,15 @@ def get_valueids_from_concept_label(label, conceptid=None, lang=None):
 
 
 def get_preflabel_from_valueid(valueid, lang):
-    concept_label = se.search(index=CONCEPTS_INDEX, id=valueid)
-    if concept_label["found"]:
-        return get_preflabel_from_conceptid(concept_label["_source"]["conceptid"], lang)
+    query = Query(se=se, start=0, limit=100)
+    bool_query = Bool()
+    bool_query.filter(Term(field="id", term=valueid))
+    query.add_query(bool_query)
+    results = query.search(index=CONCEPTS_INDEX)
+
+    if len(results["hits"]["hits"]):
+        return get_preflabel_from_conceptid(
+            results["hits"]["hits"][0]["_source"]["conceptid"], lang
+        )
+    else:
+        return None
