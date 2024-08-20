@@ -119,7 +119,7 @@ class ImportSingleCsv(BaseImportModule):
 
         with default_storage.open(csv_file_path, mode="rb") as csvfile:
             text_wrapper = io.TextIOWrapper(csvfile, encoding="utf-8")
-            reader = csv.DictReader(text_wrapper)
+            reader = csv.reader(text_wrapper)
             data = {"csv": [line for line in reader], "csv_file": csv_file_name}
             with connection.cursor() as cursor:
                 cursor.execute(
